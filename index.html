@@ -583,26 +583,49 @@ table.sig-table th{
   font-weight:500;
 }
 
-/* ==================== PRINT ==================== */
+/* ==================== PRINT (CORRIGÉ POUR PAGINATION) ==================== */
 @media print{
   body{background:#fff;}
   #splashScreen, #loginOverlay, #appFooter, .toolbar, .edit-hint, .form-panel,
   .modal-overlay, .btn-about, .btn-logout{display:none !important;}
+
+  /* Réinitialisation complète des conteneurs */
+  #appMain{
+    display:block !important;
+    height:auto !important;
+    min-height:auto !important;
+  }
+  .app{
+    display:block !important;
+    overflow:visible !important;
+    height:auto !important;
+  }
   .preview-panel{
-    padding:0;
-    display:block;
-    height:auto;
-    overflow:visible;
+    display:block !important;
+    height:auto !important;
+    overflow:visible !important;
+    padding:0 !important;
   }
+
   .act-page{
-    box-shadow:none;
-    margin:0;
-    width:auto;
-    min-height:auto;
-    padding:0;
+    width:100% !important;
+    max-width:none !important;
+    padding:0 !important;
+    margin:0 !important;
+    box-shadow:none !important;
     outline:none !important;
+    min-height:auto !important;
   }
-  @page{size:A4;margin:20mm 18mm;}
+
+  /* Autoriser les sauts de page automatiques */
+  .act-page *{
+    page-break-inside:auto;
+  }
+
+  @page{
+    size:A4;
+    margin:20mm 18mm;
+  }
 }
 
 /* ==================== RESPONSIVE ==================== */
@@ -1375,14 +1398,11 @@ function handleLogout(){
   document.getElementById("loginUsername").value = "";
   document.getElementById("loginPassword").value = "";
   document.getElementById("loginError").textContent = "";
-  // Réinitialiser l'édition directe
   if(editMode) toggleEditModeDirect();
-  // Réafficher le splash screen brièvement ? Non, juste revenir au login.
 }
 
 /* ==================== SPLASH SCREEN ==================== */
 window.addEventListener("DOMContentLoaded", function(){
-  // Splash visible au chargement
   setTimeout(function(){
     document.getElementById("splashScreen").classList.add("hidden");
   }, 1600);
@@ -1424,7 +1444,6 @@ function exportToWord(){
   const acteDiv = document.querySelector(".act-page");
   if(!acteDiv) return;
   const acteContent = acteDiv.innerHTML;
-  // Construire un document HTML complet compatible Word
   const wordHTML = `
     <html xmlns:o="urn:schemas-microsoft-com:office:office"
           xmlns:w="urn:schemas-microsoft-com:office:word"
@@ -1473,6 +1492,23 @@ function hideAboutModal(){
   document.getElementById("aboutModal").classList.remove("show");
 }
 
+/* ==================== GESTION IMPRESSION (DÉSACTIVE ÉDITION DIRECTE) ==================== */
+window.addEventListener('beforeprint', function() {
+  const page = document.querySelector('.act-page');
+  if (page && page.isContentEditable) {
+    page.setAttribute('contenteditable', 'false');
+    page._wasEditable = true;
+  }
+});
+
+window.addEventListener('afterprint', function() {
+  const page = document.querySelector('.act-page');
+  if (page && page._wasEditable) {
+    page.setAttribute('contenteditable', 'true');
+    page._wasEditable = false;
+  }
+});
+
 /* ==================== INITIALISATION ==================== */
 document.addEventListener("DOMContentLoaded", function(){
   // Événements formulaire
@@ -1501,8 +1537,6 @@ document.addEventListener("DOMContentLoaded", function(){
   document.getElementById("aboutModal").addEventListener("click", function(e){
     if(e.target === this) hideAboutModal();
   });
-
-  // Au chargement, l'app est cachée derrière le login
 });
 </script>
 
