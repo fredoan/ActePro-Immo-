@@ -1,1544 +1,921 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ActePro Immo — Générateur d'Acte de Vente Immobilière</title>
-<style>
-/* ==================== RESET & VARIABLES ==================== */
-:root{
-  --navy:#1e2b3c;
-  --navy-light:#2c3e50;
-  --accent:#b8860b;
-  --accent-hover:#d4a017;
-  --gold-light:#f5e6c8;
-  --paper:#fdfcf8;
-  --line:#d4cfc0;
-  --ink:#1a1d21;
-  --muted:#6b7280;
-  --panel-bg:#f4f2ec;
-  --form-bg:#ffffff;
-  --field-bg:#fbfaf7;
-  --field-border:#cfcbbd;
-  --white:#ffffff;
-  --shadow:0 4px 20px rgba(0,0,0,.12);
-  --shadow-lg:0 12px 40px rgba(0,0,0,.18);
-  --radius:8px;
-  --transition:0.25s ease;
-}
-*{box-sizing:border-box;}
-html,body{margin:0;padding:0;height:100%;}
-body{
-  font-family:"Segoe UI", system-ui, -apple-system, sans-serif;
-  background:var(--panel-bg);
-  color:var(--ink);
-  display:flex;
-  flex-direction:column;
-  min-height:100vh;
-}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ActePro Immo — Générateur d'actes de vente immobilière</title>
+  <style>
+    /* RESET & GLOBAL */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      transition: background 0.3s;
+    }
+    .hidden { display: none !important; }
 
-/* ==================== SPLASH SCREEN ==================== */
-#splashScreen{
-  position:fixed;
-  inset:0;
-  z-index:9999;
-  background:linear-gradient(135deg, #1e2b3c 0%, #2c3e50 40%, #1a2535 100%);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  transition:opacity 0.6s ease, visibility 0.6s ease;
-  opacity:1;
-  visibility:visible;
-}
-#splashScreen.hidden{
-  opacity:0;
-  visibility:hidden;
-  pointer-events:none;
-}
-.splash-logo{
-  width:90px;
-  height:90px;
-  border:3px solid var(--accent);
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  margin-bottom:20px;
-  animation:splashPulse 1.2s ease-in-out infinite;
-  background:rgba(255,255,255,.04);
-}
-.splash-logo-inner{
-  font-size:38px;
-  font-weight:700;
-  color:var(--accent);
-  letter-spacing:2px;
-}
-@keyframes splashPulse{
-  0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(184,134,11,.3);}
-  50%{transform:scale(1.04);box-shadow:0 0 0 18px rgba(184,134,11,0);}
-}
-.splash-title{
-  font-size:1.6rem;
-  font-weight:700;
-  color:var(--white);
-  letter-spacing:.04em;
-  margin-bottom:6px;
-}
-.splash-subtitle{
-  font-size:.82rem;
-  color:rgba(255,255,255,.65);
-  letter-spacing:.03em;
-  margin-bottom:28px;
-}
-.splash-loader{
-  width:140px;
-  height:3px;
-  background:rgba(255,255,255,.12);
-  border-radius:2px;
-  overflow:hidden;
-}
-.splash-loader-bar{
-  height:100%;
-  background:var(--accent);
-  border-radius:2px;
-  animation:splashLoad 1.5s ease-in-out forwards;
-}
-@keyframes splashLoad{
-  0%{width:0%;}
-  60%{width:70%;}
-  100%{width:100%;}
-}
+    /* SPLASH SCREEN */
+    #splashScreen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: linear-gradient(135deg, #1e2b3c 0%, #2c3e50 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+      opacity: 1;
+      visibility: visible;
+    }
+    #splashScreen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .splash-letters {
+      display: flex;
+      gap: 12px;
+      font-size: 3.5rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .splash-letters span {
+      animation: popIn 0.5s ease forwards;
+      opacity: 0;
+    }
+    .splash-letters span:nth-child(odd) { color: #b8860b; }
+    .splash-letters span:nth-child(even) { color: #f5e6c8; }
+    @keyframes popIn {
+      0% { opacity: 0; transform: translateY(20px) scale(0.8); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .splash-sub {
+      color: rgba(255,255,255,0.7);
+      margin-top: 1.5rem;
+      font-size: 1rem;
+      letter-spacing: 0.2em;
+      animation: fadeIn 1s 0.5s forwards;
+      opacity: 0;
+    }
+    @keyframes fadeIn { to { opacity:1; } }
 
-/* ==================== LOGIN OVERLAY ==================== */
-#loginOverlay{
-  position:fixed;
-  inset:0;
-  z-index:8888;
-  background:linear-gradient(135deg, #1e2b3c 0%, #2c3e50 50%, #1a2535 100%);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transition:opacity 0.5s ease, visibility 0.5s ease;
-  opacity:1;
-  visibility:visible;
-}
-#loginOverlay.hidden{
-  opacity:0;
-  visibility:hidden;
-  pointer-events:none;
-}
-.login-card{
-  background:var(--white);
-  border-radius:12px;
-  padding:36px 32px 28px 32px;
-  width:380px;
-  max-width:92vw;
-  box-shadow:var(--shadow-lg);
-  text-align:center;
-}
-.login-card .login-icon{
-  width:56px;
-  height:56px;
-  border-radius:50%;
-  background:linear-gradient(135deg, #1e2b3c, #2c3e50);
-  margin:0 auto 14px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:24px;
-  color:var(--accent);
-}
-.login-card h2{
-  margin:0 0 4px;
-  font-size:1.15rem;
-  color:var(--navy);
-  font-weight:700;
-}
-.login-card .login-sub{
-  font-size:.76rem;
-  color:var(--muted);
-  margin-bottom:20px;
-}
-.login-card .field{
-  margin-bottom:12px;
-  text-align:left;
-}
-.login-card label{
-  display:block;
-  font-size:.72rem;
-  font-weight:600;
-  color:var(--navy-light);
-  margin-bottom:4px;
-}
-.login-card input[type=text],
-.login-card input[type=password]{
-  width:100%;
-  padding:10px 12px;
-  border-radius:6px;
-  border:1.5px solid #d7d3c6;
-  background:#fdfcf8;
-  font-size:.88rem;
-  transition:border var(--transition);
-}
-.login-card input:focus{
-  outline:none;
-  border-color:var(--accent);
-  box-shadow:0 0 0 3px rgba(184,134,11,.1);
-}
-.login-card .btn-login{
-  width:100%;
-  padding:11px;
-  border:none;
-  border-radius:6px;
-  background:linear-gradient(135deg, #1e2b3c, #2c3e50);
-  color:#fff;
-  font-size:.9rem;
-  font-weight:600;
-  cursor:pointer;
-  letter-spacing:.02em;
-  margin-top:6px;
-  transition:background var(--transition), transform .15s;
-}
-.login-card .btn-login:hover{
-  background:linear-gradient(135deg, #2c3e50, #3a5068);
-  transform:translateY(-1px);
-}
-.login-error{
-  color:#c0392b;
-  font-size:.76rem;
-  margin-top:8px;
-  min-height:20px;
-  transition:opacity .3s;
-}
+    /* LOGIN */
+    .login-wrapper {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+      width: 420px;
+      max-width: 95vw;
+      padding: 2.5rem 2rem;
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .login-logo {
+      width: 70px;
+      height: 70px;
+      background: linear-gradient(135deg, #1e2b3c, #2c3e50);
+      border-radius: 50%;
+      margin: 0 auto 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #b8860b;
+      font-size: 28px;
+      font-weight: bold;
+    }
+    .login-wrapper h1 {
+      color: #1e2b3c;
+      margin-bottom: 0.2rem;
+    }
+    .login-wrapper p {
+      color: #6b7280;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+    .login-wrapper input {
+      width: 100%;
+      padding: 12px 15px;
+      margin-bottom: 15px;
+      border: 1.5px solid #d7d3c6;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: 0.2s;
+    }
+    .login-wrapper input:focus {
+      border-color: #b8860b;
+      box-shadow: 0 0 0 3px rgba(184,134,11,0.1);
+      outline: none;
+    }
+    .login-wrapper button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #1e2b3c, #2c3e50);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 1rem;
+      letter-spacing: 0.5px;
+      transition: transform 0.2s, background 0.3s;
+    }
+    .login-wrapper button:hover { transform: translateY(-1px); background: linear-gradient(135deg, #2c3e50, #3a5068); }
+    .login-error { color: #c0392b; font-size: 0.85rem; margin-top: 10px; min-height: 22px; }
 
-/* ==================== MAIN APP LAYOUT ==================== */
-#appMain{
-  display:none;
-  flex:1;
-  flex-direction:column;
-  min-height:100vh;
-}
-#appMain.active{
-  display:flex;
-}
-.app{
-  display:flex;
-  flex:1;
-  overflow:hidden;
-}
+    /* ADMIN PANEL */
+    .admin-panel, .dashboard-panel, .wizard-panel {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+      width: 95%;
+      max-width: 1000px;
+      padding: 2rem;
+      margin: 2rem;
+    }
+    .header-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .header-flex h1 { color: #1e2b3c; }
+    .btn-logout, .btn-back {
+      background: #c0392b;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .btn-back { background: #2c3e50; margin-right: 10px; }
+    .btn-logout:hover { background: #a93226; }
+    .btn-back:hover { background: #1e2b3c; }
 
-/* ---------- FORM PANEL ---------- */
-.form-panel{
-  width:44%;
-  min-width:400px;
-  max-width:580px;
-  background:var(--form-bg);
-  color:var(--ink);
-  padding:0;
-  height:100vh;
-  overflow-y:auto;
-  position:sticky;
-  top:0;
-  border-right:1px solid var(--line);
-}
-.form-header{
-  padding:20px 26px 14px 26px;
-  border-bottom:2px solid var(--accent);
-  position:sticky;
-  top:0;
-  background:var(--form-bg);
-  z-index:5;
-}
-.form-header h1{
-  margin:0 0 2px 0;
-  font-size:1.1rem;
-  font-weight:700;
-  letter-spacing:.2px;
-  color:var(--navy);
-}
-.form-header p{
-  margin:0;
-  font-size:.75rem;
-  color:var(--muted);
-}
-.form-body{padding:16px 26px 40px 26px;}
-fieldset{
-  border:1.5px solid var(--line);
-  border-radius:6px;
-  margin:0 0 14px 0;
-  padding:12px 14px 14px 14px;
-  background:#fdfcfa;
-}
-legend{
-  font-size:.7rem;
-  font-weight:700;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:var(--accent);
-  padding:0 6px;
-}
-.field-row{
-  display:flex;
-  gap:8px;
-  margin-bottom:8px;
-  flex-wrap:wrap;
-}
-.field{
-  flex:1 1 140px;
-  margin-bottom:8px;
-}
-label{
-  display:block;
-  font-size:.68rem;
-  color:var(--navy-light);
-  font-weight:600;
-  margin-bottom:3px;
-}
-input[type=text], input[type=number], select{
-  width:100%;
-  padding:6px 8px;
-  border-radius:4px;
-  border:1.5px solid var(--field-border);
-  background:var(--field-bg);
-  color:var(--ink);
-  font-size:.8rem;
-}
-input:focus, select:focus{
-  outline:2px solid var(--accent);
-  outline-offset:1px;
-  border-color:var(--accent);
-}
-input:disabled, select:disabled{
-  opacity:.5;
-  cursor:not-allowed;
-}
-.checkbox-row{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin-top:4px;
-}
-.checkbox-row input{width:auto;}
-.checkbox-row label{margin:0;font-size:.76rem;color:var(--ink);font-weight:400;}
-.hint{font-size:.66rem;color:var(--muted);margin-top:2px;}
-.three-col{display:flex;gap:6px;}
-.three-col .field{flex:1;}
-.autre-field{display:none;}
-.autre-field.show{display:block;}
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    th { background: #f4f2ec; font-weight: 600; color: #1e2b3c; }
+    .btn-sm {
+      padding: 6px 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .btn-delete { background: #e74c3c; color: white; }
+    .btn-continue { background: #2c3e50; color: white; }
+    .btn-add-user { background: #27ae60; color: white; }
 
-/* ---------- PREVIEW PANEL ---------- */
-.preview-panel{
-  flex:1;
-  padding:20px 0 50px 0;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  overflow-y:auto;
-  height:100vh;
-}
-.toolbar{
-  width:210mm;
-  max-width:92vw;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:10px;
-  flex-wrap:wrap;
-  gap:8px;
-}
-.toolbar .title{
-  font-size:.82rem;
-  color:var(--navy-light);
-  font-weight:600;
-}
-.toolbar-actions{
-  display:flex;
-  gap:8px;
-  align-items:center;
-  flex-wrap:wrap;
-}
-#printBtn, #wordBtn{
-  background:var(--navy);
-  color:#fff;
-  border:none;
-  padding:9px 16px;
-  border-radius:6px;
-  font-size:.8rem;
-  font-weight:600;
-  cursor:pointer;
-  letter-spacing:.02em;
-  box-shadow:0 2px 6px rgba(0,0,0,.14);
-  transition:background var(--transition);
-}
-#wordBtn{
-  background:#2c5f2d;
-}
-#wordBtn:hover{background:#3a7a3b;}
-#printBtn:hover{background:var(--navy-light);}
-.btn-secondary{
-  background:#fff;
-  color:var(--navy);
-  border:1.5px solid var(--navy);
-  padding:9px 14px;
-  border-radius:6px;
-  font-size:.78rem;
-  font-weight:600;
-  cursor:pointer;
-  transition:all var(--transition);
-}
-.btn-secondary:hover{background:#eef2f6;}
-.btn-secondary.active{
-  background:var(--navy);
-  color:#fff;
-}
-.btn-about{
-  background:transparent;
-  color:var(--muted);
-  border:1.5px solid #d7d3c6;
-  padding:8px 12px;
-  border-radius:6px;
-  font-size:.74rem;
-  cursor:pointer;
-  transition:all var(--transition);
-}
-.btn-about:hover{
-  color:var(--navy);
-  border-color:var(--navy);
-}
-.btn-logout{
-  background:transparent;
-  color:#a94442;
-  border:1.5px solid #e0c8c8;
-  padding:8px 12px;
-  border-radius:6px;
-  font-size:.74rem;
-  cursor:pointer;
-  transition:all var(--transition);
-}
-.btn-logout:hover{
-  background:#fdf2f2;
-  border-color:#a94442;
-}
-.edit-hint{
-  width:210mm;
-  max-width:92vw;
-  font-size:.72rem;
-  color:var(--muted);
-  padding:0 2px;
-  margin-bottom:8px;
-  display:none;
-}
-.edit-hint.show{display:block;}
+    /* WIZARD */
+    .progress-steps {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+    .step-dot {
+      width: 32px;
+      height: 32px;
+      background: #e0e0e0;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6b7280;
+      font-weight: bold;
+      font-size: 0.8rem;
+    }
+    .step-dot.active { background: #2c3e50; color: white; }
+    .step-dot.completed { background: #27ae60; color: white; }
 
-/* ---------- ACTE PAGE ---------- */
-.act-page[contenteditable="true"]{
-  outline:1.5px dashed #b7bec7;
-  outline-offset:6px;
-  cursor:text;
-}
-.act-page[contenteditable="true"]:focus{outline-color:var(--navy-light);}
-.act-page{
-  width:210mm;
-  max-width:92vw;
-  background:var(--paper);
-  box-shadow:0 4px 18px rgba(0,0,0,.18);
-  margin-bottom:26px;
-  padding:22mm 20mm;
-  font-family:"Times New Roman", Times, serif;
-  font-size:12pt;
-  line-height:1.5;
-  text-align:justify;
-  color:#111;
-  position:relative;
-}
-.act-page p{margin:0 0 10pt 0;}
-.center{text-align:center;}
-.right{text-align:right;}
-.bold{font-weight:700;}
-.underline{text-decoration:underline;}
-.italic{font-style:italic;}
-.head{
-  font-weight:700;
-  text-decoration:underline;
-  text-align:center;
-  margin:16pt 0 8pt 0;
-}
-.head-plain{
-  font-weight:400;
-  text-decoration:none;
-  text-align:left;
-  margin:16pt 0 8pt 0;
-}
-.head-italic-underline{
-  font-weight:700;
-  font-style:italic;
-  text-decoration:underline;
-  text-align:center;
-  margin:14pt 0 10pt 0;
-}
-table.sig-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:18pt;
-}
-table.sig-table th, table.sig-table td{
-  border:1px solid #000;
-  padding:8pt 6pt;
-  font-size:11pt;
-  vertical-align:top;
-}
-table.sig-table th{
-  font-weight:700;
-  background:#f4f1ea;
-  text-align:center;
-}
-.blank-line{margin:4pt 0;}
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 1.5rem;
+    }
+    .field label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 5px;
+    }
+    .field .required { color: #c0392b; margin-left: 2px; }
+    .field input, .field select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid #d7d3c6;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      transition: border-color 0.2s;
+    }
+    .field input:focus, .field select:focus {
+      border-color: #b8860b;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(184,134,11,0.1);
+    }
+    .error-msg { color: #c0392b; font-size: 0.7rem; margin-top: 3px; min-height: 16px; }
+    .wizard-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+    .btn-outline { background: #e0e0e0; color: #333; }
+    .btn-outline:hover { background: #ccc; }
+    .btn-primary { background: #2c3e50; color: white; }
+    .btn-primary:hover { background: #1e2b3c; }
+    .btn-warning { background: #f39c12; color: white; }
+    .btn-success { background: #27ae60; color: white; }
 
-/* ==================== FOOTER ==================== */
-.app-footer{
-  background:#1e2b3c;
-  color:rgba(255,255,255,.5);
-  text-align:center;
-  padding:8px 16px;
-  font-size:.68rem;
-  letter-spacing:.03em;
-  border-top:1px solid rgba(255,255,255,.06);
-}
-.app-footer span{color:var(--accent);}
+    .acte-preview-box {
+      background: #fdfcf8;
+      border: 1px solid #d4cfc0;
+      padding: 30px;
+      font-family: "Times New Roman", serif;
+      font-size: 12pt;
+      line-height: 1.5;
+      text-align: justify;
+      max-height: 60vh;
+      overflow-y: auto;
+      margin: 1.5rem 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .bold { font-weight: bold; }
+    .underline { text-decoration: underline; }
 
-/* ==================== MODAL À PROPOS ==================== */
-.modal-overlay{
-  position:fixed;
-  inset:0;
-  z-index:7777;
-  background:rgba(0,0,0,.55);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  opacity:0;
-  visibility:hidden;
-  transition:opacity .3s ease, visibility .3s ease;
-}
-.modal-overlay.show{
-  opacity:1;
-  visibility:visible;
-}
-.modal-about{
-  background:#fff;
-  border-radius:12px;
-  padding:30px 28px 22px;
-  width:420px;
-  max-width:92vw;
-  box-shadow:var(--shadow-lg);
-  text-align:center;
-  position:relative;
-}
-.modal-about .modal-close{
-  position:absolute;
-  top:12px;
-  right:14px;
-  background:none;
-  border:none;
-  font-size:1.3rem;
-  cursor:pointer;
-  color:var(--muted);
-  padding:4px 8px;
-  border-radius:4px;
-  transition:color var(--transition);
-}
-.modal-about .modal-close:hover{color:#c0392b;}
-.modal-about .about-icon{
-  width:54px;
-  height:54px;
-  border-radius:50%;
-  background:linear-gradient(135deg, #1e2b3c, #2c3e50);
-  margin:0 auto 12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:22px;
-  color:var(--accent);
-}
-.modal-about h3{
-  margin:0 0 4px;
-  font-size:1.1rem;
-  color:var(--navy);
-}
-.modal-about .about-version{
-  font-size:.78rem;
-  color:var(--accent);
-  font-weight:600;
-  margin-bottom:8px;
-}
-.modal-about p{
-  font-size:.8rem;
-  color:var(--muted);
-  margin:4px 0;
-}
-.modal-about .about-dev{
-  margin-top:12px;
-  font-size:.76rem;
-  color:var(--navy-light);
-  font-weight:500;
-}
+    /* FOOTER */
+    .app-footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: auto;
+    }
+    .app-footer a { color: #2c3e50; text-decoration: none; }
+    .app-footer a:hover { text-decoration: underline; }
 
-/* ==================== PRINT (CORRIGÉ POUR PAGINATION) ==================== */
-@media print{
-  body{background:#fff;}
-  #splashScreen, #loginOverlay, #appFooter, .toolbar, .edit-hint, .form-panel,
-  .modal-overlay, .btn-about, .btn-logout{display:none !important;}
-
-  /* Réinitialisation complète des conteneurs */
-  #appMain{
-    display:block !important;
-    height:auto !important;
-    min-height:auto !important;
-  }
-  .app{
-    display:block !important;
-    overflow:visible !important;
-    height:auto !important;
-  }
-  .preview-panel{
-    display:block !important;
-    height:auto !important;
-    overflow:visible !important;
-    padding:0 !important;
-  }
-
-  .act-page{
-    width:100% !important;
-    max-width:none !important;
-    padding:0 !important;
-    margin:0 !important;
-    box-shadow:none !important;
-    outline:none !important;
-    min-height:auto !important;
-  }
-
-  /* Autoriser les sauts de page automatiques */
-  .act-page *{
-    page-break-inside:auto;
-  }
-
-  @page{
-    size:A4;
-    margin:20mm 18mm;
-  }
-}
-
-/* ==================== RESPONSIVE ==================== */
-@media (max-width:1200px){
-  .form-panel{width:48%;min-width:340px;max-width:500px;}
-  .act-page{padding:16mm 14mm;font-size:11.5pt;}
-}
-@media (max-width:900px){
-  .app{flex-direction:column;}
-  .form-panel{
-    width:100%;
-    max-width:none;
-    height:auto;
-    position:relative;
-    min-width:auto;
-  }
-  .preview-panel{height:auto;min-height:60vh;}
-  .act-page{width:96vw;padding:10mm 8mm;font-size:11pt;}
-  .toolbar{width:96vw;gap:6px;}
-}
-@media (max-width:600px){
-  .form-header{padding:14px 14px 10px;}
-  .form-body{padding:10px 14px 30px;}
-  .toolbar{flex-direction:column;align-items:flex-start;}
-  .act-page{font-size:10pt;}
-}
-</style>
+    @media (max-width: 768px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- ==================== SPLASH SCREEN ==================== -->
+<!-- SPLASH SCREEN -->
 <div id="splashScreen">
-  <div class="splash-logo">
-    <span class="splash-logo-inner">AI</span>
-  </div>
-  <div class="splash-title">ActePro Immo</div>
-  <div class="splash-subtitle">Générateur professionnel d'actes de vente immobilière</div>
-  <div class="splash-loader"><div class="splash-loader-bar"></div></div>
+  <div class="splash-letters" id="splashLetters"></div>
+  <div class="splash-sub">Générateur d'actes de vente immobilière</div>
 </div>
 
-<!-- ==================== LOGIN OVERLAY ==================== -->
-<div id="loginOverlay">
-  <div class="login-card">
-    <div class="login-icon">🔐</div>
-    <h2>ActePro Immo</h2>
-    <p class="login-sub">Accès sécurisé — réservé aux notaires autorisés</p>
-    <div class="field">
-      <label>Identifiant</label>
-      <input type="text" id="loginUsername" placeholder="Votre identifiant" autocomplete="off">
-    </div>
-    <div class="field">
-      <label>Mot de passe</label>
-      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="off">
-    </div>
-    <div class="login-error" id="loginError"></div>
-    <button class="btn-login" id="btnLogin">Se connecter</button>
-  </div>
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="login-wrapper hidden">
+  <div class="login-logo">⚖️</div>
+  <h1>ActePro Immo</h1>
+  <p>Plateforme notariale sécurisée</p>
+  <input type="email" id="loginEmail" placeholder="Adresse email" autocomplete="email">
+  <input type="password" id="loginPassword" placeholder="Mot de passe" autocomplete="current-password">
+  <div class="login-error" id="loginError"></div>
+  <button id="btnLogin">Se connecter</button>
 </div>
 
-<!-- ==================== APPLICATION PRINCIPALE ==================== -->
-<div id="appMain">
-  <div class="app">
-
-    <!-- FORM PANEL -->
-    <div class="form-panel">
-      <div class="form-header">
-        <h1>Acte de Vente Immobilière</h1>
-        <p>Notaire : Maître Fadhil Firmin Gbadebo Eric ADAMON — Lokossa, Bénin</p>
-      </div>
-
-      <div class="form-body">
-
-        <!-- A. VENDEUR -->
-        <fieldset>
-          <legend>A. Vendeur (1ère partie)</legend>
-          <div class="field-row">
-            <div class="field">
-              <label>Civilité</label>
-              <select id="vGenre"><option value="Madame" selected>Madame</option><option value="Monsieur">Monsieur</option></select>
-            </div>
-            <div class="field" style="flex:2;">
-              <label>Prénom(s)</label>
-              <input type="text" id="vPrenom" value="Bonè Justine">
-            </div>
-          </div>
-          <div class="field-row">
-            <div class="field" style="flex:2;">
-              <label>Nom</label>
-              <input type="text" id="vNom" value="CHALLA">
-            </div>
-            <div class="field" style="flex:2;">
-              <label>Profession</label>
-              <input type="text" id="vProfession" value="Commerçante">
-            </div>
-          </div>
-          <label class="hint">Domicile</label>
-          <div class="field-row">
-            <div class="field"><label>Ville</label><input type="text" id="vDomVille" value="Lokossa"></div>
-            <div class="field"><label>Quartier</label><input type="text" id="vDomQuartier" value="Agnivèdji"></div>
-          </div>
-          <div class="field-row">
-            <div class="field"><label>Carré</label><input type="text" id="vDomCarre" value="sans borne"></div>
-            <div class="field"><label>Maison</label><input type="text" id="vDomMaison" value="Justine CHALLA"></div>
-          </div>
-          <div class="field">
-            <label>Lieu de naissance</label>
-            <input type="text" id="vLieuNaissance" value="NIKKI (République du Bénin)">
-          </div>
-          <label class="hint">Date de naissance</label>
-          <div class="three-col">
-            <div class="field"><input type="number" id="vNaissJour" value="1" min="1" max="31" placeholder="Jour"></div>
-            <div class="field">
-              <select id="vNaissMois">
-                <option>janvier</option><option>février</option><option>mars</option><option>avril</option><option>mai</option><option>juin</option><option>juillet</option><option>août</option><option>septembre</option><option>octobre</option><option>novembre</option><option>décembre</option>
-              </select>
-            </div>
-            <div class="field"><input type="number" id="vNaissAnnee" value="1976" placeholder="Année"></div>
-          </div>
-          <div class="field">
-            <label>Numéro Personnel d'Identification (NPI)</label>
-            <input type="text" id="vNPI" value="8213221860">
-          </div>
-          <div class="field-row">
-            <div class="field">
-              <label>Type de pièce</label>
-              <select id="vPieceType">
-                <option>CIP</option><option>CNI</option><option>Biométrique CEDEAO</option><option>Passeport</option><option>Autre</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>N° de la pièce</label>
-              <input type="text" id="vPieceNumero" value="20068122312826">
-            </div>
-          </div>
-          <div class="field autre-field" id="vPieceAutreWrap">
-            <label>Préciser le type de pièce</label>
-            <input type="text" id="vPieceAutre" value="">
-          </div>
-          <label class="hint">Date d'expiration de la pièce</label>
-          <div class="three-col">
-            <div class="field"><input type="number" id="vExpJour" value="30" min="1" max="31" placeholder="Jour"></div>
-            <div class="field">
-              <select id="vExpMois">
-                <option>janvier</option><option>février</option><option>mars</option><option selected>avril</option><option>mai</option><option>juin</option><option>juillet</option><option>août</option><option>septembre</option><option>octobre</option><option>novembre</option><option>décembre</option>
-              </select>
-            </div>
-            <div class="field"><input type="number" id="vExpAnnee" value="2031" placeholder="Année"></div>
-          </div>
-          <div class="field">
-            <label>Nationalité</label>
-            <input type="text" id="vNationalite" value="béninoise">
-          </div>
-          <div class="checkbox-row">
-            <input type="checkbox" id="vIciPresent" checked>
-            <label for="vIciPresent">Ici présent(e) à la signature</label>
-          </div>
-        </fieldset>
-
-        <!-- B. ACQUEREUR -->
-        <fieldset>
-          <legend>B. Acquéreur (2ème partie)</legend>
-          <div class="field-row">
-            <div class="field">
-              <label>Civilité</label>
-              <select id="aGenre"><option value="Madame">Madame</option><option value="Monsieur" selected>Monsieur</option></select>
-            </div>
-            <div class="field" style="flex:2;">
-              <label>Prénom(s)</label>
-              <input type="text" id="aPrenom" value="Alexandre">
-            </div>
-          </div>
-          <div class="field-row">
-            <div class="field" style="flex:2;">
-              <label>Nom</label>
-              <input type="text" id="aNom" value="GBAGBE">
-            </div>
-            <div class="field" style="flex:2;">
-              <label>Profession</label>
-              <input type="text" id="aProfession" value="Commerçant">
-            </div>
-          </div>
-          <label class="hint">Domicile</label>
-          <div class="field-row">
-            <div class="field"><label>Ville</label><input type="text" id="aDomVille" value="Bohicon"></div>
-            <div class="field"><label>Quartier</label><input type="text" id="aDomQuartier" value="Agonvèzoun"></div>
-          </div>
-          <div class="field-row">
-            <div class="field"><label>Carré</label><input type="text" id="aDomCarre" value="sans borne"></div>
-            <div class="field"><label>Maison</label><input type="text" id="aDomMaison" value=""></div>
-          </div>
-          <div class="field">
-            <label>Lieu de naissance</label>
-            <input type="text" id="aLieuNaissance" value="TANNOU-GOLA (République du Bénin)">
-          </div>
-          <label class="hint">Date de naissance</label>
-          <div class="three-col">
-            <div class="field"><input type="number" id="aNaissJour" value="24" min="1" max="31" placeholder="Jour"></div>
-            <div class="field">
-              <select id="aNaissMois">
-                <option>janvier</option><option>février</option><option selected>mars</option><option>avril</option><option>mai</option><option>juin</option><option>juillet</option><option>août</option><option>septembre</option><option>octobre</option><option>novembre</option><option>décembre</option>
-              </select>
-            </div>
-            <div class="field"><input type="number" id="aNaissAnnee" value="1998" placeholder="Année"></div>
-          </div>
-          <div class="field">
-            <label>Numéro Personnel d'Identification (NPI)</label>
-            <input type="text" id="aNPI" value="7883637185">
-          </div>
-          <div class="field-row">
-            <div class="field">
-              <label>Type de pièce</label>
-              <select id="aPieceType">
-                <option>CIP</option><option>CNI</option><option>Biométrique CEDEAO</option><option>Passeport</option><option>Autre</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>N° de la pièce</label>
-              <input type="text" id="aPieceNumero" value="20581736388725">
-            </div>
-          </div>
-          <div class="field autre-field" id="aPieceAutreWrap">
-            <label>Préciser le type de pièce</label>
-            <input type="text" id="aPieceAutre" value="">
-          </div>
-          <label class="hint">Date d'expiration de la pièce</label>
-          <div class="three-col">
-            <div class="field"><input type="number" id="aExpJour" value="14" min="1" max="31" placeholder="Jour"></div>
-            <div class="field">
-              <select id="aExpMois">
-                <option>janvier</option><option>février</option><option>mars</option><option>avril</option><option>mai</option><option>juin</option><option>juillet</option><option>août</option><option>septembre</option><option selected>octobre</option><option>novembre</option><option>décembre</option>
-              </select>
-            </div>
-            <div class="field"><input type="number" id="aExpAnnee" value="2027" placeholder="Année"></div>
-          </div>
-          <div class="field">
-            <label>Nationalité</label>
-            <input type="text" id="aNationalite" value="béninoise">
-          </div>
-        </fieldset>
-
-        <!-- C. BIEN -->
-        <fieldset>
-          <legend>C. Désignation du bien</legend>
-          <div class="field-row">
-            <div class="field">
-              <label>Type d'immeuble</label>
-              <select id="bienType"><option>rural</option><option>urbain</option><option>autre</option></select>
-            </div>
-            <div class="field">
-              <label>État</label>
-              <select id="bienEtat"><option>non bâti</option><option>bâti</option></select>
-            </div>
-          </div>
-          <div class="field autre-field" id="bienTypeAutreWrap">
-            <label>Préciser le type d'immeuble</label>
-            <input type="text" id="bienTypeAutre" value="">
-          </div>
-          <div class="field">
-            <label>Forme</label>
-            <select id="bienForme"><option>irrégulière</option><option>quadrangulaire</option><option>rectangulaire</option><option>autre</option></select>
-          </div>
-          <div class="field autre-field" id="bienFormeAutreWrap">
-            <label>Préciser la forme</label>
-            <input type="text" id="bienFormeAutre" value="">
-          </div>
-          <div class="field-row">
-            <div class="field"><label>Sis à</label><input type="text" id="bienSis" value="Fongba"></div>
-            <div class="field"><label>Arrondissement</label><input type="text" id="bienArrondissement" value="Lokossa"></div>
-          </div>
-          <div class="field">
-            <label>Commune</label>
-            <input type="text" id="bienCommune" value="Lokossa">
-          </div>
-          <label class="hint">Superficie</label>
-          <div class="three-col">
-            <div class="field"><input type="number" id="bienHa" value="2" min="0" placeholder="ha"></div>
-            <div class="field"><input type="number" id="bienA" value="35" min="0" max="99" placeholder="a"></div>
-            <div class="field"><input type="number" id="bienCa" value="65" min="0" max="99" placeholder="ca"></div>
-          </div>
-          <div class="field-row">
-            <div class="field"><label>N° du titre foncier (TF)</label><input type="text" id="bienTF" value="436"></div>
-          </div>
-          <div class="field-row">
-            <div class="field"><label>Volume</label><input type="text" id="bienVolume" value="III"></div>
-            <div class="field"><label>Folio</label><input type="text" id="bienFolio" value="033"></div>
-          </div>
-          <div class="field">
-            <label>Commune du bureau (remise de titre / transcription)</label>
-            <select id="communeFormalites">
-              <option selected>Lokossa</option>
-              <option>Aplahoué</option><option>Abomey</option><option>Allada</option><option>Ouidah</option>
-              <option>Cotonou</option><option>Abomey-Calavi</option><option>Porto-Novo</option><option>Pobè</option>
-              <option>Kandi</option><option>Parakou</option><option>Djougou</option><option>Natitingou</option>
-            </select>
-            <p class="hint">Commune du Bureau Communal du Domaine et du Foncier où seront faites la remise de titre et la transcription.</p>
-          </div>
-        </fieldset>
-
-        <!-- D. ORIGINE DE PROPRIETE -->
-        <fieldset>
-          <legend>D. Origine de propriété</legend>
-          <div class="field">
-            <label>Mode d'acquisition</label>
-            <select id="origMode"><option>achat</option><option>donation</option><option>succession</option><option>autre</option></select>
-          </div>
-          <div class="field autre-field" id="origModeAutreWrap">
-            <label>Préciser le mode d'acquisition</label>
-            <input type="text" id="origModeAutre" value="">
-          </div>
-          <div class="field">
-            <label>Nom du vendeur précédent</label>
-            <input type="text" id="origVendeurPrecedent" value="Yao BOSSOU">
-          </div>
-          <div class="field">
-            <label>Référence de la convention de vente</label>
-            <input type="text" id="origConventionRef" value="96/075/CL/SG/DST-SAFU">
-          </div>
-          <div class="field">
-            <label>Date de la convention (texte libre en lettres)</label>
-            <input type="text" id="origConventionDate" value="vingt-huit septembre deux mil onze">
-          </div>
-          <div class="field">
-            <label>Prix d'acquisition précédent (FCFA)</label>
-            <input type="number" id="origPrix" value="1148000">
-          </div>
-        </fieldset>
-
-        <!-- E. PRIX DE VENTE -->
-        <fieldset>
-          <legend>E. Prix de vente</legend>
-          <div class="field">
-            <label>Montant en chiffres (FCFA)</label>
-            <input type="number" id="prixVente" value="6120000">
-          </div>
-        </fieldset>
-
-        <!-- F. DATE DE L'ACTE -->
-        <fieldset>
-          <legend>F. Date de l'acte</legend>
-          <div class="field-row">
-            <div class="field">
-              <label>Année</label>
-              <input type="number" id="acteAnnee" value="2026">
-            </div>
-            <div class="field" style="flex:2;">
-              <label>Jour et mois (texte libre)</label>
-              <input type="text" id="acteJourMois" value="10 août">
-            </div>
-          </div>
-        </fieldset>
-
-      </div>
-    </div>
-
-    <!-- PREVIEW PANEL -->
-    <div class="preview-panel">
-      <div class="toolbar">
-        <span class="title" id="toolbarTitle">Aperçu en direct</span>
-        <div class="toolbar-actions">
-          <button id="editToggleBtn" class="btn-secondary">✏️ Modifier le texte directement</button>
-          <button id="wordBtn">📄 Exporter en Word</button>
-          <button id="printBtn">🖨️ Imprimer / PDF</button>
-          <button id="aboutBtn" class="btn-about">ℹ️ À propos</button>
-          <button id="logoutBtn" class="btn-logout">🚪 Déconnexion</button>
-        </div>
-      </div>
-      <div class="edit-hint" id="editHint">Cliquez dans le texte pour le corriger directement, puis « Terminer l'édition » quand vous avez fini.</div>
-      <div id="acte-container"></div>
-    </div>
+<!-- ADMIN PANEL -->
+<div id="adminScreen" class="admin-panel hidden">
+  <div class="header-flex">
+    <h1>👑 Administration</h1>
+    <button class="btn-logout" id="btnLogoutAdmin">Déconnexion</button>
   </div>
+  <p style="color:#6b7280; margin-bottom:1rem;">Gestion des comptes utilisateurs (notaires, clercs).</p>
+  <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:1.5rem;">
+    <input type="text" id="newUserName" placeholder="Nom complet" style="flex:1;">
+    <input type="email" id="newUserEmail" placeholder="Email" style="flex:1;">
+    <input type="password" id="newUserPassword" placeholder="Mot de passe" style="flex:1;">
+    <select id="newUserRole" style="flex:0.5;">
+      <option value="notaire">Notaire</option>
+      <option value="clerc">Clerc</option>
+      <option value="admin">Admin</option>
+    </select>
+    <button class="btn btn-success btn-sm" id="btnAddUser">➕ Ajouter</button>
+  </div>
+  <table id="usersTable">
+    <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Créé le</th><th>Action</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <div id="adminError" style="color:#c0392b; font-size:0.85rem; margin-top:10px;"></div>
+</div>
 
-  <!-- FOOTER -->
-  <div class="app-footer" id="appFooter">
-    Développé par <span>Frédy Amoussou ANAHAHOUNDE</span> — Août 2026 — ActePro Immo v1.0
+<!-- USER DASHBOARD -->
+<div id="userDashboard" class="dashboard-panel hidden">
+  <div class="header-flex">
+    <h1>📁 Mes dossiers</h1>
+    <button class="btn-logout" id="btnLogoutUser">Déconnexion</button>
+  </div>
+  <button class="btn btn-success" id="btnNewDossier" style="margin-bottom:1.5rem;">＋ Nouvel acte de vente</button>
+  <table id="dossiersTable">
+    <thead><tr><th>Date création</th><th>Statut</th><th>Étape</th><th>Actions</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<!-- WIZARD -->
+<div id="wizardScreen" class="wizard-panel hidden">
+  <div class="header-flex">
+    <h1>✍️ Rédaction de l'acte</h1>
+    <button class="btn-back" id="btnBackToDashboard">← Retour au tableau de bord</button>
+  </div>
+  <div class="progress-steps" id="progressBar"></div>
+  <div id="stepContent"></div>
+  <div class="wizard-buttons">
+    <button class="btn btn-outline" id="btnPrev">← Précédent</button>
+    <button class="btn btn-warning" id="btnSaveDraft">💾 Enregistrer le brouillon</button>
+    <button class="btn btn-primary" id="btnNext">Suivant →</button>
+    <button class="btn btn-success hidden" id="btnGenerate">📄 Générer l'acte</button>
+  </div>
+  <div id="actePreview" class="acte-preview-box hidden"></div>
+  <div id="exportButtons" class="wizard-buttons hidden">
+    <button class="btn btn-outline" id="btnExportWord">📥 Word</button>
+    <button class="btn btn-outline" id="btnExportPDF">🖨️ PDF</button>
+    <button class="btn btn-outline" id="btnExportHTML">🌐 HTML</button>
   </div>
 </div>
 
-<!-- ==================== MODAL À PROPOS ==================== -->
-<div class="modal-overlay" id="aboutModal">
-  <div class="modal-about">
-    <button class="modal-close" id="closeAboutModal">✕</button>
-    <div class="about-icon">📜</div>
-    <h3>ActePro Immo</h3>
-    <p class="about-version">Version 1.0</p>
-    <p>Générateur professionnel d'actes de vente immobilière</p>
-    <p>Conçu pour les notaires et professionnels du droit immobilier</p>
-    <p class="about-dev">Développé par Frédy Amoussou ANAHAHOUNDE — Août 2026</p>
-  </div>
-</div>
+<footer class="app-footer">
+  Développé par <strong>Amoussou Frédy ANAHAHOUNDE</strong> — Août 2026 — 
+  <a href="https://wa.me/22900000000" target="_blank">WhatsApp</a>
+</footer>
 
-<script>
-/* =========================================================
-   CONVERSION NOMBRES -> LETTRES (français)
-   ========================================================= */
-const ONES = ["zéro","un","deux","trois","quatre","cinq","six","sept","huit","neuf","dix",
-  "onze","douze","treize","quatorze","quinze","seize","dix-sept","dix-huit","dix-neuf"];
+<!-- Firebase + Scripts -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-auth.js";
+  import { getFirestore, collection, doc, getDoc, setDoc, deleteDoc, onSnapshot, query, where, orderBy, serverTimestamp, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.1/firebase-firestore.js";
 
-function twoDigitWords(n){
-  n = Math.round(n);
-  if(n < 20) return ONES[n];
-  const tensDigit = Math.floor(n/10);
-  const unit = n % 10;
-  switch(tensDigit){
-    case 2: case 3: case 4: case 5: case 6: {
-      const base = ["","","vingt","trente","quarante","cinquante","soixante"][tensDigit];
-      if(unit === 0) return base;
-      if(unit === 1) return base + " et un";
-      return base + "-" + ONES[unit];
+  const firebaseConfig = {
+    apiKey: "AIzaSyC4vOTOGwOdmhsyRF1kIEBYPNVzgax9G8A",
+    authDomain: "actepro-immo.firebaseapp.com",
+    projectId: "actepro-immo",
+    storageBucket: "actepro-immo.firebasestorage.app",
+    messagingSenderId: "451534021985",
+    appId: "1:451534021985:web:f06acf8882c693ab4e5120"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // --- Localités Bénin ---
+  const departementsCommunes = {
+    "Alibori": ["Banikoara","Gogounou","Kandi","Karimama","Malanville","Ségbana"],
+    "Atacora": ["Boukoumbé","Cobly","Kérou","Kouandé","Matéri","Natitingou","Péhunco","Tanguiéta","Toucountouna"],
+    "Atlantique": ["Abomey-Calavi","Allada","Kpomassè","Ouidah","Sô-Ava","Toffo","Tori-Bossito","Zè"],
+    "Borgou": ["Bembéréké","Kalalé","N'Dali","Nikki","Parakou","Pèrèrè","Sinendé","Tchaourou"],
+    "Collines": ["Bantè","Dassa-Zoumè","Glazoué","Ouèssè","Savalou","Savè"],
+    "Couffo": ["Aplahoué","Djakotomey","Dogbo","Klouékanmè","Lalo","Toviklin"],
+    "Donga": ["Bassila","Copargo","Djougou","Ouaké"],
+    "Littoral": ["Cotonou"],
+    "Mono": ["Athiémé","Bopa","Comè","Grand-Popo","Houéyogbé","Lokossa"],
+    "Ouémé": ["Adjarra","Adjohoun","Aguégués","Akpro-Missérété","Avrankou","Bonou","Dangbo","Porto-Novo","Sèmè-Kpodji"],
+    "Plateau": ["Adja-Ouèrè","Ifangni","Kétou","Pobè","Sakété"],
+    "Zou": ["Abomey","Agbangnizoun","Bohicon","Covè","Djidja","Ouinhi","Zagnanado","Za-Kpota","Zogbodomey"]
+  };
+
+  // --- Conversion nombres -> lettres (français) pour l'acte ---
+  const ONES = ["zéro","un","deux","trois","quatre","cinq","six","sept","huit","neuf","dix",
+    "onze","douze","treize","quatorze","quinze","seize","dix-sept","dix-huit","dix-neuf"];
+  function twoDigits(n) {
+    n = Math.round(n);
+    if (n < 20) return ONES[n];
+    const tensDigit = Math.floor(n/10);
+    const unit = n % 10;
+    switch (tensDigit) {
+      case 2: case 3: case 4: case 5: case 6: {
+        const base = ["","","vingt","trente","quarante","cinquante","soixante"][tensDigit];
+        if (unit === 0) return base;
+        if (unit === 1) return base + " et un";
+        return base + "-" + ONES[unit];
+      }
+      case 7: return unit === 1 ? "soixante et onze" : "soixante-" + ONES[10+unit];
+      case 8: return unit === 0 ? "quatre-vingts" : "quatre-vingt-" + ONES[unit];
+      case 9: return "quatre-vingt-" + ONES[10+unit];
     }
-    case 7: {
-      if(unit === 1) return "soixante et onze";
-      return "soixante-" + ONES[10+unit];
+    return "";
+  }
+  function convertHundreds(n) {
+    n = Math.round(n);
+    if (n < 100) return twoDigits(n);
+    const h = Math.floor(n/100);
+    const rem = n % 100;
+    let str = (h === 1) ? "cent" : (ONES[h] + " cent");
+    if (rem === 0) { if (h > 1) str += "s"; return str; }
+    return str + " " + twoDigits(rem);
+  }
+  function numberToFrenchWords(n) {
+    n = Math.round(Number(n) || 0);
+    if (n === 0) return "zéro";
+    if (n < 0) return "moins " + numberToFrenchWords(-n);
+    const millions = Math.floor(n/1000000);
+    const thousands = Math.floor((n%1000000)/1000);
+    const remainder = n%1000;
+    const parts = [];
+    if (millions > 0) parts.push(millions === 1 ? "un million" : convertHundreds(millions) + " millions");
+    if (thousands > 0) parts.push(thousands === 1 ? "mille" : convertHundreds(thousands) + " mille");
+    if (remainder > 0) parts.push(convertHundreds(remainder));
+    return parts.join(" ").trim();
+  }
+  function formatThousands(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
+  function moneyWordsUpper(n) { return numberToFrenchWords(n).toUpperCase() + " (" + formatThousands(n) + ")"; }
+  function moneyWordsLower(n) { return numberToFrenchWords(n) + " (" + formatThousands(n) + ")"; }
+  function superficieWords(ha, a, ca) {
+    ha = Number(ha)||0; a = Number(a)||0; ca = Number(ca)||0;
+    const parts = [];
+    if (ha > 0) parts.push(numberToFrenchWords(ha) + (ha > 1 ? " hectares" : " hectare"));
+    if (a > 0) parts.push(numberToFrenchWords(a) + (a > 1 ? " ares" : " are"));
+    if (ca > 0) parts.push(numberToFrenchWords(ca) + (ca > 1 ? " centiares" : " centiare"));
+    const words = parts.length ? parts.join(" ") : "zéro";
+    const compact = "(" + String(ha).padStart(2,"0") + "ha " + String(a).padStart(2,"0") + "a " + String(ca).padStart(2,"0") + "ca)";
+    return words + " " + compact;
+  }
+  function yearToWords(year) {
+    year = Math.round(Number(year) || 0);
+    if (year >= 2000 && year < 3000) {
+      const rem = year - 2000;
+      return "deux mil" + (rem > 0 ? " " + convertHundreds(rem) : "");
     }
-    case 8: {
-      if(unit === 0) return "quatre-vingts";
-      return "quatre-vingt-" + ONES[unit];
+    if (year >= 1000 && year < 2000) {
+      const rem = year - 1000;
+      return "mil" + (rem > 0 ? " " + convertHundreds(rem) : "");
     }
-    case 9: {
-      return "quatre-vingt-" + ONES[10+unit];
+    return numberToFrenchWords(year);
+  }
+  function dayToWords(day) {
+    day = Math.round(Number(day) || 0);
+    if (day === 1) return "premier";
+    return twoDigits(day);
+  }
+  function dateWords(day, month, year) {
+    return dayToWords(day) + " " + month + " " + yearToWords(year);
+  }
+  const monthNames = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+  function formatDateFromString(dateStr) {
+    if (!dateStr) return { day:"", month:"", year:"" };
+    const d = new Date(dateStr);
+    return { day: d.getDate(), month: monthNames[d.getMonth()], year: d.getFullYear() };
+  }
+
+  // --- Gestion des écrans ---
+  const loginScreen = document.getElementById("loginScreen");
+  const adminScreen = document.getElementById("adminScreen");
+  const userDashboard = document.getElementById("userDashboard");
+  const wizardScreen = document.getElementById("wizardScreen");
+  let currentUser = null, currentDossierId = null, currentStep = 0;
+  const totalSteps = 7;
+  let dossierData = { vendeur:{}, acquereur:{}, bien:{}, origine:{}, prix:"", dateActe:{} };
+
+  // Splash animation
+  function initSplash() {
+    const letters = "A C T E P R O I M M O".split(" ");
+    const container = document.getElementById("splashLetters");
+    container.innerHTML = "";
+    letters.forEach((letter, i) => {
+      const span = document.createElement("span");
+      span.textContent = letter;
+      span.style.animationDelay = `${i * 0.15}s`;
+      container.appendChild(span);
+    });
+    setTimeout(() => {
+      document.getElementById("splashScreen").classList.add("hidden");
+      loginScreen.classList.remove("hidden");
+    }, 5000);
+  }
+  initSplash();
+
+  // Auth handlers
+  document.getElementById("btnLogin").addEventListener("click", async () => {
+    const email = document.getElementById("loginEmail").value.trim();
+    const pwd = document.getElementById("loginPassword").value;
+    try { await signInWithEmailAndPassword(auth, email, pwd); }
+    catch (e) { document.getElementById("loginError").textContent = "Email ou mot de passe incorrect."; }
+  });
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    if (user) {
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (snap.exists() && snap.data().role === "admin") showAdminScreen();
+      else if (snap.exists()) showDashboard();
+      else { await signOut(auth); alert("Compte non configuré."); }
+    } else { loginScreen.classList.remove("hidden"); }
+  });
+  async function logout() { await signOut(auth); }
+  document.getElementById("btnLogoutAdmin").addEventListener("click", logout);
+  document.getElementById("btnLogoutUser").addEventListener("click", logout);
+
+  function showAdminScreen() { loginScreen.classList.add("hidden"); adminScreen.classList.remove("hidden"); userDashboard.classList.add("hidden"); wizardScreen.classList.add("hidden"); loadUsers(); }
+  function showDashboard() { loginScreen.classList.add("hidden"); adminScreen.classList.add("hidden"); userDashboard.classList.remove("hidden"); wizardScreen.classList.add("hidden"); loadDossiers(); }
+  function showWizard() { loginScreen.classList.add("hidden"); adminScreen.classList.add("hidden"); userDashboard.classList.add("hidden"); wizardScreen.classList.remove("hidden"); }
+
+  // Admin: users CRUD
+  function loadUsers() {
+    const q = query(collection(db, "users"), orderBy("dateCreation","desc"));
+    onSnapshot(q, (snap) => {
+      const tbody = document.querySelector("#usersTable tbody");
+      tbody.innerHTML = "";
+      snap.forEach(d => {
+        const u = d.data();
+        tbody.innerHTML += `<tr><td>${u.nom||''}</td><td>${u.email}</td><td>${u.role}</td><td>${u.dateCreation? new Date(u.dateCreation.toDate()).toLocaleDateString():''}</td><td><button class="btn-sm btn-delete" data-uid="${d.id}">🗑️</button></td></tr>`;
+      });
+    });
+  }
+  document.getElementById("btnAddUser").addEventListener("click", async () => {
+    const name = document.getElementById("newUserName").value.trim();
+    const email = document.getElementById("newUserEmail").value.trim();
+    const pwd = document.getElementById("newUserPassword").value;
+    const role = document.getElementById("newUserRole").value;
+    if (!name||!email||!pwd) return alert("Champs requis.");
+    try {
+      const userCred = await createUserWithEmailAndPassword(auth, email, pwd);
+      await setDoc(doc(db, "users", userCred.user.uid), { nom:name, email, role, actif:true, dateCreation:serverTimestamp() });
+      alert("Utilisateur créé !");
+    } catch(e) { alert("Erreur: "+e.message); }
+  });
+  document.addEventListener("click", async (e) => {
+    if (e.target.classList.contains("btn-delete")) {
+      const uid = e.target.dataset.uid;
+      if (uid === currentUser.uid) return alert("Impossible de supprimer votre propre compte.");
+      if (confirm("Supprimer ?")) {
+        await deleteDoc(doc(db, "users", uid));
+        alert("Utilisateur supprimé de Firestore. (Suppression Auth manuelle).");
+      }
+    }
+  });
+
+  // Dashboard dossiers
+  function loadDossiers() {
+    if (!currentUser) return;
+    const q = query(collection(db, "dossiers"), where("creePar","==",currentUser.uid), orderBy("dateCreation","desc"));
+    onSnapshot(q, (snap) => {
+      const tbody = document.querySelector("#dossiersTable tbody");
+      tbody.innerHTML = "";
+      snap.forEach(d => {
+        const data = d.data();
+        tbody.innerHTML += `<tr><td>${data.dateCreation? new Date(data.dateCreation.toDate()).toLocaleDateString():''}</td><td>${data.statut==='termine'?'✅':'📝'}</td><td>${data.etapeActuelle||1}/${totalSteps}</td><td><button class="btn-sm btn-continue" data-id="${d.id}">📂 Reprendre</button></td></tr>`;
+      });
+    });
+  }
+  document.getElementById("btnNewDossier").addEventListener("click", () => {
+    currentDossierId = null;
+    dossierData = { vendeur:{}, acquereur:{}, bien:{}, origine:{}, prix:"", dateActe:{} };
+    currentStep = 0;
+    showWizard();
+    renderStep();
+  });
+  document.addEventListener("click", async (e) => {
+    if (e.target.classList.contains("btn-continue")) {
+      const id = e.target.dataset.id;
+      const snap = await getDoc(doc(db, "dossiers", id));
+      if (snap.exists()) {
+        const data = snap.data();
+        dossierData = data.donnees;
+        currentStep = (data.etapeActuelle || 1) - 1;
+        currentDossierId = id;
+        showWizard();
+        renderStep();
+      }
+    }
+  });
+  document.getElementById("btnBackToDashboard").addEventListener("click", () => showDashboard());
+
+  // Wizard logic
+  function renderProgress() {
+    const bar = document.getElementById("progressBar");
+    bar.innerHTML = "";
+    for (let i=0; i<totalSteps; i++) {
+      const dot = document.createElement("div");
+      dot.className = "step-dot";
+      if (i < currentStep) dot.classList.add("completed");
+      else if (i === currentStep) dot.classList.add("active");
+      dot.textContent = i+1;
+      bar.appendChild(dot);
     }
   }
-  return "";
-}
+  function renderStep() {
+    renderProgress();
+    const container = document.getElementById("stepContent");
+    container.innerHTML = "";
+    document.getElementById("btnPrev").classList.toggle("hidden", currentStep===0);
+    document.getElementById("btnNext").classList.toggle("hidden", currentStep===totalSteps-1);
+    document.getElementById("btnGenerate").classList.toggle("hidden", currentStep!==totalSteps-1);
+    document.getElementById("actePreview").classList.add("hidden");
+    document.getElementById("exportButtons").classList.add("hidden");
 
-function convertHundreds(n){
-  n = Math.round(n);
-  if(n < 100) return twoDigitWords(n);
-  const h = Math.floor(n/100);
-  const rem = n % 100;
-  let str = (h === 1) ? "cent" : (ONES[h] + " cent");
-  if(rem === 0){
-    if(h > 1) str += "s";
-    return str;
+    switch(currentStep) {
+      case 0: renderPersonneForm(container, "vendeur", "Vendeur"); break;
+      case 1: renderPersonneForm(container, "acquereur", "Acquéreur"); break;
+      case 2: renderBienForm(container); break;
+      case 3: renderOrigineForm(container); break;
+      case 4: renderPrixForm(container); break;
+      case 5: renderDateActeForm(container); break;
+      case 6: renderGeneration(container); break;
+    }
   }
-  return str + " " + twoDigitWords(rem);
-}
 
-function numberToFrenchWords(n){
-  n = Math.round(Number(n) || 0);
-  if(n === 0) return "zéro";
-  if(n < 0) return "moins " + numberToFrenchWords(-n);
-  const millions = Math.floor(n/1000000);
-  const thousands = Math.floor((n % 1000000)/1000);
-  const remainder = n % 1000;
-  const parts = [];
-  if(millions > 0){
-    parts.push(millions === 1 ? "un million" : convertHundreds(millions) + " millions");
+  function fieldHTML(id, label, value="", type="text", required=true) {
+    return `<div class="field"><label>${label}${required?'<span class="required">*</span>':''}</label><input type="${type}" id="${id}" value="${value||''}"><div class="error-msg" id="${id}Error"></div></div>`;
   }
-  if(thousands > 0){
-    parts.push(thousands === 1 ? "mille" : convertHundreds(thousands) + " mille");
+  function selectHTML(id, label, value, options, required=true) {
+    let opts = options.map(o => `<option value="${o}" ${o===value?'selected':''}>${o}</option>`).join('');
+    return `<div class="field"><label>${label}${required?'<span class="required">*</span>':''}</label><select id="${id}">${opts}</select><div class="error-msg" id="${id}Error"></div></div>`;
   }
-  if(remainder > 0){
-    parts.push(convertHundreds(remainder));
+
+  function renderPersonneForm(container, prefix, titre) {
+    const p = dossierData[prefix] || {};
+    container.innerHTML = `<h2>Identité du ${titre}</h2>`;
+    const grid = document.createElement("div"); grid.className = "form-grid";
+    grid.innerHTML = `
+      ${selectHTML(prefix+"Genre", "Civilité", p.genre||(prefix==="vendeur"?"Madame":"Monsieur"), ["Madame","Monsieur"])}
+      ${fieldHTML(prefix+"Prenom", "Prénom(s)", p.prenom)}
+      ${fieldHTML(prefix+"Nom", "Nom", p.nom)}
+      ${fieldHTML(prefix+"Profession", "Profession", p.profession)}
+      ${fieldHTML(prefix+"DateNaissance", "Date de naissance", p.dateNaissance||"", "date")}
+      ${fieldHTML(prefix+"LieuNaissance", "Lieu de naissance", p.lieuNaissance)}
+      ${fieldHTML(prefix+"NPI", "NPI", p.npi)}
+      ${selectHTML(prefix+"PieceType", "Type pièce", p.pieceType||"CIP", ["CIP","CNI","Biométrique CEDEAO","Passeport","Autre"])}
+      ${fieldHTML(prefix+"PieceNum", "N° pièce", p.pieceNum)}
+      ${fieldHTML(prefix+"PieceExp", "Expiration", p.pieceExp||"", "date")}
+      ${selectHTML(prefix+"Dept", "Département", p.dept||"Mono", Object.keys(departementsCommunes))}
+      ${selectHTML(prefix+"Commune", "Commune", p.commune||"Lokossa", departementsCommunes[p.dept||"Mono"]||[])}
+      ${fieldHTML(prefix+"Arrond", "Arrondissement", p.arrond)}
+      ${fieldHTML(prefix+"Quartier", "Quartier", p.quartier)}
+      ${selectHTML(prefix+"SituationMat", "Situation matrimoniale", p.situationMat||"Célibataire", ["Célibataire","Marié(e)","Veuf/Veuve","Divorcé(e)"])}
+      ${fieldHTML(prefix+"DocMat", "Réf. certificat/acte", p.docMat)}
+    `;
+    container.appendChild(grid);
+    // cascade département -> commune
+    document.getElementById(prefix+"Dept").addEventListener("change", function() {
+      const selComm = document.getElementById(prefix+"Commune");
+      const comms = departementsCommunes[this.value] || [];
+      selComm.innerHTML = comms.map(c => `<option>${c}</option>`).join('');
+    });
   }
-  return parts.join(" ").trim();
-}
 
-function formatThousands(n){
-  n = Math.round(Number(n) || 0);
-  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-}
-
-function moneyWordsUpper(n){ return numberToFrenchWords(n).toUpperCase() + " (" + formatThousands(n) + ")"; }
-function moneyWordsLower(n){ return numberToFrenchWords(n) + " (" + formatThousands(n) + ")"; }
-function pad2(n){ n = Math.round(Number(n) || 0); return String(n).padStart(2,"0"); }
-
-function superficieWords(ha, a, ca){
-  ha = Number(ha)||0; a = Number(a)||0; ca = Number(ca)||0;
-  const parts = [];
-  if(ha > 0) parts.push(numberToFrenchWords(ha) + (ha > 1 ? " hectares" : " hectare"));
-  if(a  > 0) parts.push(numberToFrenchWords(a)  + (a  > 1 ? " ares" : " are"));
-  if(ca > 0) parts.push(numberToFrenchWords(ca) + (ca > 1 ? " centiares" : " centiare"));
-  const words = parts.length ? parts.join(" ") : "zéro";
-  const compact = "(" + pad2(ha) + "ha " + pad2(a) + "a " + pad2(ca) + "ca)";
-  return words + " " + compact;
-}
-
-function yearToWords(year){
-  year = Math.round(Number(year) || 0);
-  if(year >= 2000 && year < 3000){
-    const rem = year - 2000;
-    return "deux mil" + (rem > 0 ? " " + convertHundreds(rem) : "");
+  function renderBienForm(container) {
+    const b = dossierData.bien || {};
+    container.innerHTML = `<h2>Désignation du bien</h2>`;
+    const grid = document.createElement("div"); grid.className = "form-grid";
+    grid.innerHTML = `
+      ${selectHTML("bienType", "Type immeuble", b.type||"rural", ["rural","urbain"])}
+      ${selectHTML("bienEtat", "État", b.etat||"non bâti", ["non bâti","bâti"])}
+      ${selectHTML("bienForme", "Forme", b.forme||"irrégulière", ["irrégulière","quadrangulaire","rectangulaire"])}
+      ${fieldHTML("bienHa", "Hectares", b.ha, "number")}
+      ${fieldHTML("bienA", "Ares", b.a, "number")}
+      ${fieldHTML("bienCa", "Centiares", b.ca, "number")}
+      ${fieldHTML("bienTF", "N° Titre Foncier", b.tf)}
+      ${fieldHTML("bienVolume", "Volume", b.volume)}
+      ${fieldHTML("bienFolio", "Folio", b.folio)}
+      ${fieldHTML("bienSis", "Sis à", b.sis)}
+      ${selectHTML("bienDept", "Département", b.dept||"Mono", Object.keys(departementsCommunes))}
+      ${selectHTML("bienCommune", "Commune", b.commune||"Lokossa", departementsCommunes[b.dept||"Mono"]||[])}
+      ${fieldHTML("bienArrond", "Arrondissement", b.arrond)}
+    `;
+    container.appendChild(grid);
+    document.getElementById("bienDept").addEventListener("change", function() {
+      const sel = document.getElementById("bienCommune");
+      sel.innerHTML = (departementsCommunes[this.value]||[]).map(c => `<option>${c}</option>`).join('');
+    });
   }
-  if(year >= 1000 && year < 2000){
-    const rem = year - 1000;
-    return "mil" + (rem > 0 ? " " + convertHundreds(rem) : "");
+
+  function renderOrigineForm(container) {
+    const o = dossierData.origine || {};
+    container.innerHTML = `<h2>Origine de propriété</h2>`;
+    const grid = document.createElement("div"); grid.className = "form-grid";
+    grid.innerHTML = `
+      ${selectHTML("origMode", "Mode acquisition", o.mode||"achat", ["achat","donation","succession"])}
+      ${fieldHTML("origVendeur", "Ancien vendeur", o.vendeur)}
+      ${fieldHTML("origRefConv", "Réf. convention", o.refConv)}
+      ${fieldHTML("origDateConv", "Date convention (lettres)", o.dateConv)}
+      ${fieldHTML("origPrix", "Prix acquisition (FCFA)", o.prix, "number")}
+    `;
+    container.appendChild(grid);
   }
-  return numberToFrenchWords(year);
-}
 
-function dayToWords(day){
-  day = Math.round(Number(day) || 0);
-  if(day === 1) return "premier";
-  return twoDigitWords(day);
-}
-
-function dateWords(day, month, year){
-  return dayToWords(day) + " " + month + " " + yearToWords(year);
-}
-
-function esc(s){
-  if(s === undefined || s === null) return "";
-  const d = document.createElement("div");
-  d.innerText = String(s);
-  return d.innerHTML;
-}
-
-function boldNomIn(text, nom){
-  const escText = esc(text);
-  if(!nom) return escText;
-  const escNom = esc(nom).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  if(!escNom) return escText;
-  const regex = new RegExp(escNom, "gi");
-  return escText.replace(regex, function(match){ return '<span class="bold">' + match + '</span>'; });
-}
-
-function pieceInfo(type, autre){
-  switch(type){
-    case "CIP": return {label:"du certificat d'identification personnelle", fem:false};
-    case "CNI": return {label:"de la carte nationale d'identité", fem:true};
-    case "Biométrique CEDEAO": return {label:"de la carte d'identité biométrique CEDEAO", fem:true};
-    case "Passeport": return {label:"du passeport", fem:false};
-    default: return {label:"de la pièce dénommée " + (autre || "pièce d'identité"), fem:true};
+  function renderPrixForm(container) {
+    container.innerHTML = `<h2>Prix de vente</h2>
+      <div class="form-grid">
+        ${fieldHTML("prixVente", "Montant (FCFA)", dossierData.prix, "number")}
+      </div>`;
   }
-}
 
-function val(id){ const el = document.getElementById(id); return el ? el.value : ""; }
-function checked(id){ const el = document.getElementById(id); return el ? el.checked : false; }
-
-function buildPersonBlock(prefix, numero, isSeller){
-  const genre = val(prefix+"Genre");
-  const fem = genre === "Madame";
-  const prenom = val(prefix+"Prenom");
-  const nom = val(prefix+"Nom");
-  const profession = val(prefix+"Profession");
-  const ville = val(prefix+"DomVille");
-  const quartier = val(prefix+"DomQuartier");
-  const carre = val(prefix+"DomCarre");
-  const maison = val(prefix+"DomMaison");
-  const lieuNaissance = val(prefix+"LieuNaissance");
-  const naissJour = val(prefix+"NaissJour");
-  const naissMois = val(prefix+"NaissMois");
-  const naissAnnee = val(prefix+"NaissAnnee");
-  const npi = val(prefix+"NPI");
-  const pieceType = val(prefix+"PieceType");
-  const pieceAutre = val(prefix+"PieceAutre");
-  const pieceNumero = val(prefix+"PieceNumero");
-  const expJour = val(prefix+"ExpJour");
-  const expMois = val(prefix+"ExpMois");
-  const expAnnee = val(prefix+"ExpAnnee");
-  const nationalite = val(prefix+"Nationalite");
-
-  const pInfo = pieceInfo(pieceType, pieceAutre);
-  const enregAccord = fem ? "Enregistrée" : "Enregistré";
-  const delivreAccord = pInfo.fem ? "délivrée" : "délivré";
-
-  let maisonPart = maison ? (", maison " + boldNomIn(maison, nom)) : "";
-  let domicileLine = `demeurant à ${esc(ville)}, quartier ${esc(quartier)}, carré ${esc(carre)}${maisonPart} ;`;
-
-  let html = "";
-  html += `<p>${numero}-/ ${esc(genre)} ${esc(prenom)} <span class="bold">${esc(nom)}</span>, ${esc(profession)}, ${domicileLine}</p>`;
-  html += `<p>Né${fem?"e":""} à ${esc(lieuNaissance)}, le ${esc(dateWords(naissJour, naissMois, naissAnnee))} ;</p>`;
-  html += `<p>${enregAccord} au numéro personnel d'identification ${esc(npi)} et titulaire ${pInfo.label} numéro ${esc(pieceNumero)}, ${delivreAccord} par l'Agence Nationale d'Identification des Personnes (ANIP) et expirant le ${esc(dateWords(expJour, expMois, expAnnee))} ;</p>`;
-
-  let natLine = `De nationalité ${esc(nationalite)}`;
-  if(isSeller && checked("vIciPresent")){
-    natLine += " et ici " + (fem ? "présente" : "présent");
+  function renderDateActeForm(container) {
+    const d = dossierData.dateActe || {};
+    container.innerHTML = `<h2>Date de l'acte</h2>
+      <div class="form-grid">
+        ${fieldHTML("acteDate", "Date complète", d.date||"", "date")}
+      </div>`;
   }
-  natLine += " ;";
-  html += `<p>${natLine}</p>`;
-  return html;
-}
 
-const NOTAIRE_NOM_HTML = '<span class="bold">Fadhil Firmin Gbadebo Eric ADAMON</span>';
-
-function generateActeHTML(){
-  toggleAutre("vPieceType","vPieceAutreWrap","Autre");
-  toggleAutre("aPieceType","aPieceAutreWrap","Autre");
-  toggleAutre("bienType","bienTypeAutreWrap","autre");
-  toggleAutre("bienForme","bienFormeAutreWrap","autre");
-  toggleAutre("origMode","origModeAutreWrap","autre");
-
-  const vGenre = val("vGenre");
-  const vFem = vGenre === "Madame";
-  const aGenre = val("aGenre");
-  const aFem = aGenre === "Madame";
-
-  const sArt = vFem ? "la" : "le";
-  const sArtCap = vFem ? "La" : "Le";
-  const sTitle = vFem ? "VENDERESSE" : "VENDEUR";
-  const sPronoun = vFem ? "LAQUELLE" : "LEQUEL";
-
-  const bArt = aFem ? "la" : "le";
-  const bTitle = aFem ? "ACQUERESSE" : "ACQUEREUR";
-  const bPresentAdj = aFem ? "présente" : "présent";
-
-  const vNom = val("vNom"), vPrenom = val("vPrenom");
-  const aNom = val("aNom"), aPrenom = val("aPrenom");
-
-  let bienType = val("bienType");
-  if(bienType === "autre") bienType = val("bienTypeAutre") || "autre";
-  let bienForme = val("bienForme");
-  if(bienForme === "autre") bienForme = val("bienFormeAutre") || "autre";
-  const bienEtat = val("bienEtat");
-  const bienSis = val("bienSis");
-  const bienArr = val("bienArrondissement");
-  const bienCommune = val("bienCommune");
-  const communeFormalites = val("communeFormalites");
-  const bienHa = val("bienHa"), bienA = val("bienA"), bienCa = val("bienCa");
-  const bienTF = val("bienTF");
-  const bienVolume = val("bienVolume");
-  const bienFolio = val("bienFolio");
-  const superficieTxt = superficieWords(bienHa, bienA, bienCa);
-
-  let origMode = val("origMode");
-  if(origMode === "autre") origMode = val("origModeAutre") || "autre";
-  const origVendeurPrecedent = val("origVendeurPrecedent");
-  const origConventionRef = val("origConventionRef");
-  const origConventionDate = val("origConventionDate");
-  const origPrix = val("origPrix");
-  const origPrixTxt = moneyWordsLower(origPrix);
-
-  const prixVente = val("prixVente");
-  const prixVenteTxt = moneyWordsUpper(prixVente);
-
-  const acteAnnee = val("acteAnnee");
-  const acteJourMois = val("acteJourMois");
-  const acteAnneeWords = yearToWords(acteAnnee).toUpperCase();
-
-  let doc = "";
-  doc += `<p><span class="bold underline">PARDEVANT</span> Maître ${NOTAIRE_NOM_HTML}, Notaire à LOKOSSA (République du Bénin), soussigné</p>`;
-  doc += `<p class="right"><span class="underline">ONT COMPARU :</span></p>`;
-  doc += buildPersonBlock("v", 1, true);
-  doc += `<p>Ci-après dénommé${vFem?"e":""} « ${sArt.toUpperCase()} ${sTitle} » ;</p>`;
-  doc += `<p class="right underline">D'UNE PART ;</p>`;
-  doc += `<p><span class="underline">${sPronoun}</span>, a par ces présentes, vendu en s'obligeant à toutes les garanties ordinaires de fait et de droit les plus étendues en pareille matière à :</p>`;
-  doc += buildPersonBlock("a", 2, false);
-  doc += `<p class="right bold underline">D'AUTRE PART ;</p>`;
-  doc += `<p>${bTitle}, à ce ${bPresentAdj} et qui accepte, les bien et droits immobiliers, dont la désignation ci-après plus amplement désignée.</p>`;
-  doc += `<p class="head">DESIGNATION</p>`;
-  doc += `<p>Les biens et droits immobiliers présentement vendus comprennent la propriété exclusive et particulière d'un immeuble ${esc(bienType)} ${esc(bienEtat)}, de forme ${esc(bienForme)}, sis à ${esc(bienSis)}, Arrondissement de ${esc(bienArr)}, Commune de ${esc(bienCommune)}, d'une contenance superficielle de <span class="bold">${superficieTxt}</span>, objet du titre foncier numéro ${esc(bienTF)}, inséré au registre foncier de la Commune de ${esc(bienCommune)}, Volume <span class="bold">${esc(bienVolume)},</span> Folio <span class="bold">${esc(bienFolio)}.</span></p>`;
-  doc += `<p>Ainsi au surplus que ledit bien immobilier existe, s'étend, se poursuit et se comporte avec toutes ses aisances, dépendances et toutes mitoyennetés, sans aucune exception, ni réserve.</p>`;
-  doc += `<p class="head-plain">SERVITUDE</p>`;
-  doc += `<p>${sArtCap} ${sTitle} déclare qu'à sa connaissance le bien objet de la présente vente n'est grevé d'aucune autre servitude que celles administratives ordinaires.</p>`;
-  doc += `<p class="head">ORIGINE DE PROPRIETE</p>`;
-  doc += `<p>Les bien et droits immobiliers présentement vendus appartiennent à ${sArt} ${sTitle}, pour les avoir acquis par voie d'${esc(origMode)} auprès de ${esc(origVendeurPrecedent)} suivant convention de vente numéro ${esc(origConventionRef)} du ${esc(origConventionDate)} au prix de <span class="bold">${origPrixTxt}</span> francs CFA.</p>`;
-  doc += `<p class="head">PROPRIETE – JOUISSANCE</p>`;
-  doc += `<p>L'acquéreur aura la pleine propriété et la jouissance du bien et des droits immobiliers présentement vendus à compter de ce jour par la libre disposition et la prise de possession réelle, ledit bien étant libre de toute occupation, location, préavis de réquisition ou réquisition ainsi que ${sArt} ${sTitle.toLowerCase()} le déclare sous sa responsabilité personnelle.</p>`;
-  doc += `<p class="head">CHARGES ET CONDITIONS</p>`;
-  doc += `<p>La présente vente est faite sous les charges et conditions ordinaires et de droit en pareille matière et notamment sous celles suivantes que l'acquéreur s'oblige à exécuter et à accomplir savoir :</p>`;
-  doc += `<p><span class="bold">1)</span> - Prendre l'immeuble vendu dans l'état où il se trouve actuellement, sans recours contre ${sArt} ${sTitle} pour quelque cause que ce soit, et notamment pour raison soit de mitoyenneté, soit de défaut d'alignement, soit de mauvais état des constructions, du sol ou du sous-sol, soit de vices même cachés, soit enfin d'erreur dans la désignation ou dans la contenance ci-dessus indiquées, la différence entre cette contenance et celle réelle excédât-elle un vingtième en plus ou moins, devant faire le profit ou la perte de ${aFem ? "l'acquéresse" : "l'acquéreur"} ;</p>`;
-  doc += `<p><span class="bold">2)</span> - Acquitter à compter du jour de l'entrée en jouissance les impôts, taxes et contributions de toute nature auxquels l'immeuble vendu peut ou pourra être assujetti ;</p>`;
-  doc += `<p>A cet effet, ${sArt} ${sTitle} déclare s'être acquittée à ce jour, de l'entièreté des impôts, taxes et contributions de toute nature grevant l'immeuble vendu et s'engage à régler toutes autres charges qui se révéleraient ultérieurement et dont le point de départ remonterait à une période dont elle avait la propriété.</p>`;
-  doc += `<p><span class="bold">3)</span> - Souffrir les servitudes passives, conventionnelles ou légales, apparentes ou occultes, continues ou discontinues qui peuvent grever l'immeuble présentement vendu, sauf à s'en défendre et à profiter de celles actives, s'il en existe, le tout à ses risques et périls sans que la présente clause puisse donner à qui que ce soit plus de droit qu'il n'en aurait en vertu de titres réguliers non prescrits ou de la loi ;</p>`;
-  doc += `<p>A cet égard, ${sArt} ${sTitle} déclare qu'elle n'a personnellement créé ni laissé acquérir aucune servitude sur l'immeuble présentement vendu et qu'à sa connaissance, il n'existe aucune servitude ;</p>`;
-  doc += `<p><span class="bold">4)</span> - Payer tous les frais, droits et honoraires des présentes et ceux qui en seront la suite ou la conséquence.</p>`;
-  doc += `<p class="head">TAXE SUR LA PLUS-VALUE</p>`;
-  doc += `<p>Les parties sont informées, par les présentes, des dispositions du Code Général des Impôts en vigueur en République du Bénin instituant à la charge du propriétaire VENDEUR, une taxe sur la plus-value immobilière.</p>`;
-  doc += `<p>A cet effet, ${sArt} ${sTitle} consent dès à présent, irrévocablement, à constituer une provision suffisante en vue du règlement de ladite taxe une fois qu'elle aura été liquidée et fixée par les Autorités compétentes en pareille matière.</p>`;
-  doc += `<p>A défaut du paiement effectif de la taxe sur la plus-value immobilière acquise à sa charge cumulativement avec les droits d'enregistrement imposés à l'Acquéreur tel qu'il est indiqué ci-dessous, ${sArt} ${sTitle} reconnu${vFem?"e":""} fautif${vFem?"ve":""}, sera tenu${vFem?"e":""} d'exécuter et d'assumer toutes pénalités ou toutes conséquences qui seraient dues à un retard du non respect des délais réglementaires ci-après rappelés dans la clause « ENREGISTREMENT ».</p>`;
-  doc += `<p>A cet égard, ${sArt} ${sTitle} après avoir été informé${vFem?"e":""} par le notaire soussigné des conséquences judiciaires d'une fausse déclaration dans un acte authentique et notamment, des poursuites civiles et pénales qui peuvent être engagées contre elle :</p>`;
-  doc += `<p>- Déclare sur l'honneur avoir une parfaite connaissance de la nature et de l'étendue des engagements découlant des présentes, savoir le paiement à sa charge, de la taxe sur la plus-value immobilière suite à la présente vente ;</p>`;
-  doc += `<p>- Reconnaît avoir été informé${vFem?"e":""} par le notaire soussigné des dispositions indiquant que « la taxe est liquidée et payée au même moment à l'occasion des formalités d'enregistrement des actes d'aliénation » ;</p>`;
-  doc += `<p>- Et s'engage par conséquent sur l'honneur, à procéder au règlement de ladite taxe telle qu'elle sera déterminée par les services compétents soit, par la comptabilité du notaire soussigné ou par leurs propres soins.</p>`;
-  doc += `<p class="head">PRIX</p>`;
-  doc += `<p>En outre, la présente vente est consentie et acceptée moyennant le prix principal de <span class="bold">${prixVenteTxt}</span> francs CFA que l'acquéreur a payé dès avant ce jour, hors la comptabilité du notaire soussigné, ainsi que ${sArt} ${sTitle} le reconnaît et en consent bonne et définitive quittance.</p>`;
-  doc += `<p class="right underline">DONT QUITTANCE</p>`;
-  doc += `<p class="head">ORIGINE DES FONDS</p>`;
-  doc += `<p>Les parties déclarent que les fonds ayant servi à l'acquisition de l'immeuble ne proviennent pas d'une origine illicite et ne sont pas destinés à un usage prohibé par la loi.</p>`;
-  doc += `<p>Elles reconnaissent avoir été informées par le notaire soussigné de l'obligation qui lui est faite de déclarer à la cellule nationale de traitement des informations financières (CENTIF-BENIN), toute transaction réalisée devant son ministère et qui serait en contravention avec la loi numéro 2018-17 du vingt-cinq juillet deux mil dix-huit relative à la lutte contre le blanchiment de capitaux et le financement du terrorisme en République du Bénin et de ses décrets et arrêtés d'application.</p>`;
-  doc += `<p class="head-italic-underline">ENREGISTREMENT</p>`;
-  doc += `<p>Les présentes seront enregistrées conformément aux dispositions du Code Général des Impôts en vigueur en République du Bénin, les droits d'enregistrement étant actuellement fixés au taux de CINQ POUR CENT (5%) du prix d'aliénation.</p>`;
-  doc += `<p>A cet effet, le Notaire soussigné rappelle aux Comparants :</p>`;
-  doc += `<p>- les énonciations des dispositions du Code Général des Impôts relativement au délai légalement requis pour l'enregistrement des actes ;</p>`;
-  doc += `<p>- et les informe des conséquences desdites dispositions en cas de non-respect dudit délai, ce qu'ils reconnaissent et déclarent comprendre parfaitement, dégageant ainsi le Notaire de toute responsabilité à cet égard.</p>`;
-  doc += `<p class="head">REMISE DE TITRE</p>`;
-  doc += `<p>${sArtCap} ${sTitle} a, à l'instant, remis au notaire soussigné la copie du titre foncier numéro ${esc(bienTF)}, inséré au registre foncier de la Commune de ${esc(bienCommune)}, Volume <span class="bold">${esc(bienVolume)},</span> Folio <span class="bold">${esc(bienFolio)},</span> relatif aux bien et droits immobiliers présentement vendus aux fins de sa mutation au nom de l'acquéreur au Bureau Communal du Domaine et du Foncier de ${esc(communeFormalites)}.</p>`;
-  doc += `<p class="head">TRANSCRIPTION</p>`;
-  doc += `<p>Une expédition des présentes sera transcrite au bureau communal du domaine et du foncier de ${esc(communeFormalites)} en vue de la mutation du titre foncier concerné au nom de l'${bTitle}.</p>`;
-  doc += `<p class="head">POUVOIRS</p>`;
-  doc += `<p>Pour l'accomplissement des formalités dont il s'agit, les parties agissant dans un intérêt commun, donnent tous pouvoirs nécessaires à tout clerc de Maître ${NOTAIRE_NOM_HTML} notaire à LOKOSSA, à l'effet de faire dresser et signer tous actes complémentaires, rectificatifs ou modificatifs des présentes, pour mettre celles-ci, s'il y a lieu, en concordance avec les documents officiels.</p>`;
-  doc += `<p class="head">ÉLECTION DE DOMICILE</p>`;
-  doc += `<p>Pour l'exécution des présentes, les parties font élection de domicile en leurs demeures respectives ;</p>`;
-  doc += `<p>Et pour les formalités à intervenir, en l'étude du notaire soussigné.</p>`;
-  doc += `<p class="head">FRAIS</p>`;
-  doc += `<p>Tous les frais, droits et honoraires des présentes et ceux qui en seront la suite ou la conséquence seront supportés par l'acquéreur qui s'oblige à leur paiement.</p>`;
-  doc += `<p class="head">DECLARATIONS D'ETAT CIVIL ET AUTRES</p>`;
-  doc += `<p>Les parties déclarent qu'elles sont nées aux lieux et dates sus-indiqués ;</p>`;
-  doc += `<p>- qu'elles sont de nationalités indiquées ci-dessus.</p>`;
-  doc += `<p>- qu'elles ont leurs domiciles réels aux adresses indiquées en tête des présentes.</p>`;
-  doc += `<p>- qu'elles ont la jouissance de leurs droits civils.</p>`;
-  doc += `<p>${sArtCap} ${sTitle} déclare :</p>`;
-  doc += `<p>- que l'immeuble présentement vendu est libre de toutes inscriptions d'hypothèque judiciaire, conventionnelle ou légale ainsi que de tout privilège ;</p>`;
-  doc += `<p>- qu'il n'est pas susceptible d'être l'objet de poursuites pouvant entraîner la confiscation totale ou partielle de ses biens ;</p>`;
-  doc += `<p>- qu'il n'existe aucune action en rescision ou en résolution de la présente vente devant les tribunaux.</p>`;
-  doc += `<p>- que si lors ou par suite de l'accomplissement des formalités de publicité, il existe ou survient des inscriptions ou oppositions à la présente vente, ${sArt} ${sTitle} sera tenu${vFem?"e":""} d'en rapporter les mainlevées et certificats de radiation dans les trente (30) jours de la dénonciation amiable qui lui sera faite au domicile ci-dessus élu.</p>`;
-  doc += `<p class="head">LECTURE DES LOIS - AFFIRMATION DE SINCERITE</p>`;
-  doc += `<p>Avant de clore et conformément à la loi, Maître ${NOTAIRE_NOM_HTML}, notaire soussigné a donné lecture aux parties qui le reconnaissent, des dispositions de l'article 366 du Code Pénal ainsi que de l'article 561 du Code Général des Impôts qui précise que :</p>`;
-  doc += `<p>1» « Pendant un délai de trois (03) mois, à compter du jour de l'enregistrement en République du Bénin d'une mutation, l'administration fiscale peut exercer au profit du trésor un droit de préemption sur les immeubles, droits immobiliers, fonds de commerce ou clientèle, droit à un bail ou au bénéfice d'une promesse de bail portant sur tout ou partie d'un immeuble dont elle estime le prix de vente insuffisant, en offrant de verser aux ayants droit le montant de ce prix majoré d'un dixième.</p>`;
-  doc += `<p>2» Ce droit est exercé sur autorisation du ministre chargé des finances, mais sans que le service ait à justifier de cette autorisation.</p>`;
-  doc += `<p>3» Il résulte d'une notification à l'acquéreur, soit à domicile réel, soit au domicile élu dans l'acte ou, éventuellement, à la personne qui a signé pour lui l'acte d'acquisition, par acte extrajudiciaire non susceptible de recours. Notification semblable est faite au VENDEUR et au conservateur de la propriété foncière de la situation des biens lorsqu'il s'agit d'immeubles immatriculés ou en cours d'immatriculation.</p>`;
-  doc += `<p>Le bien objet de cet acte extrajudiciaire est immédiatement, de ce seul fait, incorporé au domaine privé ».</p>`;
-  doc += `<p>Tous droits sur les biens préemptés, concédés par le cessionnaire évincé antérieurement à l'exercice de la préemption sont censés n'avoir jamais pris naissance. Ceux qui auraient été inscrits sur les livres fonciers sont radiés.</p>`;
-  doc += `<p>Les dépenses relatives à l'exercice du droit de préemption sont imputées au budget de l'Etat ».</p>`;
-  doc += `<p>Chacune des parties interpellées séparément a affirmé sous les peines édictées par le Code Général des Impôts, que le présent acte exprime l'intégralité du prix convenu.</p>`;
-  doc += `<p>Maître ${NOTAIRE_NOM_HTML}, notaire soussigné affirme qu'à sa connaissance, le présent acte n'est modifié, ni contredit par aucune contre-lettre contenant augmentation du prix ci-dessus fixé.</p>`;
-  doc += `<p class="right underline">DONT ACTE REDIGE SUR CINQ (05) PAGES.</p>`;
-  doc += `<p class="blank-line">Contenant :</p>`;
-  doc += `<p class="blank-line">Renvois :</p>`;
-  doc += `<p class="blank-line">Mots rayés nuls :</p>`;
-  doc += `<p class="blank-line">Chiffre rayé nul :</p>`;
-  doc += `<p class="blank-line">Lignes entières rayées nulles :</p>`;
-  doc += `<p class="blank-line">Barres tirées dans les blancs :</p>`;
-  doc += `<p>La lecture du présent acte a été prise par les parties elles-mêmes et les signatures de celles-ci sur ledit acte ont été recueillies par le notaire soussigné, qui a signé avec elles.</p>`;
-  doc += `<p>Fait et passé à Lokossa, Résidence DATO ;</p>`;
-  doc += `<p>En l'Etude de Maître ${NOTAIRE_NOM_HTML}, notaire soussigné ;</p>`;
-  doc += `<p>L'AN ${esc(acteAnneeWords)}</p>`;
-  doc += `<p>ET LE ${esc(acteJourMois)}</p>`;
-
-  doc += `<table class="sig-table">
-    <tr><th>NOM ET PRENOMS</th><th>QUALITES</th><th>SIGNATURES</th></tr>
-    <tr><td>${esc(vGenre)} ${esc(vPrenom)} <span class="bold">${esc(vNom)}</span></td><td>${sTitle}</td><td>&nbsp;</td></tr>
-    <tr><td>${esc(aGenre)} ${esc(aPrenom)} <span class="bold">${esc(aNom)}</span></td><td>${bTitle}</td><td>&nbsp;</td></tr>
-    <tr><td>Maître <span class="bold">Fadhil Firmin Gbadebo Eric ADAMON</span></td><td>NOTAIRE</td><td>&nbsp;</td></tr>
-  </table>`;
-
-  return doc;
-}
-
-function render(){
-  const doc = generateActeHTML();
-  const container = document.getElementById("acte-container");
-  container.innerHTML = `<div class="act-page">${doc}</div>`;
-}
-
-function toggleAutre(selectId, wrapId, triggerValue){
-  const sel = document.getElementById(selectId);
-  const wrap = document.getElementById(wrapId);
-  if(!sel || !wrap) return;
-  if(sel.value === triggerValue){
-    wrap.classList.add("show");
-  } else {
-    wrap.classList.remove("show");
+  function renderGeneration(container) {
+    container.innerHTML = `<h2>Vérification et génération</h2>
+      <p>Veuillez vérifier les informations saisies avant de générer l'acte. Cliquez sur « Générer l'acte » pour prévisualiser le document final.</p>`;
   }
-}
 
-/* ==================== LOGIN ==================== */
-const CREDENTIALS = { username: "admin", password: "ActePro2026" };
-
-function showLoginError(msg){
-  document.getElementById("loginError").textContent = msg || "";
-}
-
-function handleLogin(){
-  const username = document.getElementById("loginUsername").value.trim();
-  const password = document.getElementById("loginPassword").value;
-  if(username === CREDENTIALS.username && password === CREDENTIALS.password){
-    document.getElementById("loginError").textContent = "";
-    document.getElementById("loginOverlay").classList.add("hidden");
-    document.getElementById("appMain").classList.add("active");
-    render();
-  } else {
-    showLoginError("Identifiant ou mot de passe incorrect. Veuillez réessayer.");
+  // Validation
+  function validateStep() {
+    let valid = true;
+    document.querySelectorAll("#stepContent input, #stepContent select").forEach(el => {
+      const field = el.closest(".field");
+      if (field && field.querySelector(".required") && !el.value.trim()) {
+        el.style.borderColor = "#c0392b";
+        const err = field.querySelector(".error-msg");
+        if (err) err.textContent = "Champ obligatoire.";
+        valid = false;
+      } else {
+        el.style.borderColor = "#d7d3c6";
+        const err = field.querySelector(".error-msg");
+        if (err) err.textContent = "";
+      }
+    });
+    return valid;
   }
-}
 
-function handleLogout(){
-  document.getElementById("appMain").classList.remove("active");
-  document.getElementById("loginOverlay").classList.remove("hidden");
-  document.getElementById("loginUsername").value = "";
-  document.getElementById("loginPassword").value = "";
-  document.getElementById("loginError").textContent = "";
-  if(editMode) toggleEditModeDirect();
-}
+  function collectStepData() {
+    switch(currentStep) {
+      case 0: case 1: {
+        const prefix = currentStep===0 ? "vendeur" : "acquereur";
+        dossierData[prefix] = {
+          genre: document.getElementById(prefix+"Genre")?.value,
+          prenom: document.getElementById(prefix+"Prenom")?.value,
+          nom: document.getElementById(prefix+"Nom")?.value,
+          profession: document.getElementById(prefix+"Profession")?.value,
+          dateNaissance: document.getElementById(prefix+"DateNaissance")?.value,
+          lieuNaissance: document.getElementById(prefix+"LieuNaissance")?.value,
+          npi: document.getElementById(prefix+"NPI")?.value,
+          pieceType: document.getElementById(prefix+"PieceType")?.value,
+          pieceNum: document.getElementById(prefix+"PieceNum")?.value,
+          pieceExp: document.getElementById(prefix+"PieceExp")?.value,
+          dept: document.getElementById(prefix+"Dept")?.value,
+          commune: document.getElementById(prefix+"Commune")?.value,
+          arrond: document.getElementById(prefix+"Arrond")?.value,
+          quartier: document.getElementById(prefix+"Quartier")?.value,
+          situationMat: document.getElementById(prefix+"SituationMat")?.value,
+          docMat: document.getElementById(prefix+"DocMat")?.value
+        };
+        break;
+      }
+      case 2: dossierData.bien = {
+        type: document.getElementById("bienType")?.value,
+        etat: document.getElementById("bienEtat")?.value,
+        forme: document.getElementById("bienForme")?.value,
+        ha: document.getElementById("bienHa")?.value,
+        a: document.getElementById("bienA")?.value,
+        ca: document.getElementById("bienCa")?.value,
+        tf: document.getElementById("bienTF")?.value,
+        volume: document.getElementById("bienVolume")?.value,
+        folio: document.getElementById("bienFolio")?.value,
+        sis: document.getElementById("bienSis")?.value,
+        dept: document.getElementById("bienDept")?.value,
+        commune: document.getElementById("bienCommune")?.value,
+        arrond: document.getElementById("bienArrond")?.value
+      }; break;
+      case 3: dossierData.origine = {
+        mode: document.getElementById("origMode")?.value,
+        vendeur: document.getElementById("origVendeur")?.value,
+        refConv: document.getElementById("origRefConv")?.value,
+        dateConv: document.getElementById("origDateConv")?.value,
+        prix: document.getElementById("origPrix")?.value
+      }; break;
+      case 4: dossierData.prix = document.getElementById("prixVente")?.value; break;
+      case 5: dossierData.dateActe = { date: document.getElementById("acteDate")?.value }; break;
+    }
+  }
 
-/* ==================== SPLASH SCREEN ==================== */
-window.addEventListener("DOMContentLoaded", function(){
-  setTimeout(function(){
-    document.getElementById("splashScreen").classList.add("hidden");
-  }, 1600);
-});
+  // Save draft
+  async function saveDraft() {
+    collectStepData();
+    const payload = {
+      creePar: currentUser.uid,
+      statut: "brouillon",
+      etapeActuelle: currentStep+1,
+      donnees: dossierData,
+      dateModification: serverTimestamp()
+    };
+    try {
+      if (currentDossierId) await updateDoc(doc(db,"dossiers",currentDossierId), payload);
+      else {
+        const docRef = await addDoc(collection(db,"dossiers"), { ...payload, dateCreation: serverTimestamp() });
+        currentDossierId = docRef.id;
+      }
+      alert("Brouillon enregistré !");
+    } catch(e) { alert("Erreur: "+e.message); }
+  }
 
-/* ==================== ÉDITION DIRECTE ==================== */
-let editMode = false;
-
-function setFormFieldsDisabled(disabled){
-  document.querySelectorAll(".form-panel input, .form-panel select").forEach(function(el){
-    el.disabled = disabled;
+  // Navigation
+  document.getElementById("btnPrev").addEventListener("click", () => { if (currentStep>0) { collectStepData(); currentStep--; renderStep(); } });
+  document.getElementById("btnNext").addEventListener("click", () => {
+    if (!validateStep()) return;
+    collectStepData();
+    if (currentStep < totalSteps-1) { currentStep++; renderStep(); }
   });
-}
+  document.getElementById("btnSaveDraft").addEventListener("click", saveDraft);
 
-function toggleEditModeDirect(){
-  const btn = document.getElementById("editToggleBtn");
-  const hint = document.getElementById("editHint");
-  const page = document.querySelector(".act-page");
+  // Generate acte
+  function generateActeHTML(data) {
+    const v = data.vendeur, a = data.acquereur, bien = data.bien, orig = data.origine, prix = data.prix, dateActe = data.dateActe;
+    const vFem = v.genre === "Madame", aFem = a.genre === "Madame";
+    const sArt = vFem ? "la" : "le", sArtCap = vFem ? "La" : "Le";
+    const sTitle = vFem ? "VENDERESSE" : "VENDEUR";
+    const sPronoun = vFem ? "LAQUELLE" : "LEQUEL";
+    const bTitle = aFem ? "ACQUERESSE" : "ACQUEREUR";
+    const bPresentAdj = aFem ? "présente" : "présent";
+    const vDate = formatDateFromString(v.dateNaissance);
+    const aDate = formatDateFromString(a.dateNaissance);
+    const bienHa = bien.ha||0, bienA = bien.a||0, bienCa = bien.ca||0;
+    const superf = superficieWords(bienHa, bienA, bienCa);
+    const origPrixTxt = moneyWordsLower(orig.prix);
+    const prixVenteTxt = moneyWordsUpper(prix);
+    const acteDateObj = formatDateFromString(dateActe.date);
+    const acteJourMois = acteDateObj.day ? `${acteDateObj.day} ${acteDateObj.month}` : "";
+    const acteAnneeWords = yearToWords(acteDateObj.year).toUpperCase();
 
-  if(!editMode){
-    editMode = true;
-    if(page) page.setAttribute("contenteditable", "true");
-    btn.textContent = "✅ Terminer l'édition";
-    btn.classList.add("active");
-    hint.classList.add("show");
-    setFormFieldsDisabled(true);
-  } else {
-    editMode = false;
-    if(page) page.removeAttribute("contenteditable");
-    btn.textContent = "✏️ Modifier le texte directement";
-    btn.classList.remove("active");
-    hint.classList.remove("show");
-    setFormFieldsDisabled(false);
+    return `
+    <p><span class="bold underline">PARDEVANT</span> Maître <span class="bold">Fadhil Firmin Gbadebo Eric ADAMON</span>, Notaire à LOKOSSA (République du Bénin), soussigné</p>
+    <p class="right underline">ONT COMPARU :</p>
+    <p>1-/ ${v.genre} ${v.prenom} <span class="bold">${v.nom}</span>, ${v.profession}, demeurant à ${v.commune}, quartier ${v.quartier}, arrondissement ${v.arrond} ;</p>
+    <p>Né${vFem?'e':''} à ${v.lieuNaissance}, le ${dateWords(vDate.day, vDate.month, vDate.year)} ;</p>
+    <p>Enregistré${vFem?'e':''} au NPI ${v.npi}, titulaire ${v.pieceType} n° ${v.pieceNum} expirant le ${formatDateFromString(v.pieceExp).day}/${formatDateFromString(v.pieceExp).month}/${formatDateFromString(v.pieceExp).year} ;</p>
+    <p>De nationalité béninoise, ${v.situationMat}, ${v.docMat ? 'réf. '+v.docMat : ''} ;</p>
+    <p>Ci-après dénommé${vFem?'e':''} « ${sArt.toUpperCase()} ${sTitle} » ;</p>
+    <p class="right underline">D'UNE PART ;</p>
+    <p><span class="underline">${sPronoun}</span>, a par ces présentes, vendu... à :</p>
+    <p>2-/ ${a.genre} ${a.prenom} <span class="bold">${a.nom}</span>, ${a.profession}, demeurant à ${a.commune}, quartier ${a.quartier} ;</p>
+    <p>Né${aFem?'e':''} à ${a.lieuNaissance}, le ${dateWords(aDate.day, aDate.month, aDate.year)} ;</p>
+    <p>Enregistré${aFem?'e':''} au NPI ${a.npi}, titulaire ${a.pieceType} n° ${a.pieceNum}... ;</p>
+    <p class="right bold underline">D'AUTRE PART ;</p>
+    <p>${bTitle}, à ce ${bPresentAdj} et qui accepte, les bien et droits immobiliers ci-après désignés.</p>
+    <p class="head">DESIGNATION</p>
+    <p>Immeuble ${bien.type} ${bien.etat}, forme ${bien.forme}, sis à ${bien.sis}, arrondissement ${bien.arrond}, commune ${bien.commune}, superficie <span class="bold">${superf}</span>, TF n° ${bien.tf}, Volume ${bien.volume}, Folio ${bien.folio}.</p>
+    <p class="head">ORIGINE DE PROPRIETE</p>
+    <p>Acquis par ${orig.mode} auprès de ${orig.vendeur} suivant convention ${orig.refConv} du ${orig.dateConv} au prix de <span class="bold">${origPrixTxt}</span> francs CFA.</p>
+    <p class="head">PRIX</p>
+    <p>La présente vente est consentie et acceptée moyennant le prix principal de <span class="bold">${prixVenteTxt}</span> francs CFA.</p>
+    <p>Fait et passé à Lokossa, l'AN ${acteAnneeWords}, le ${acteJourMois}.</p>
+    <p class="right underline">DONT ACTE</p>
+    `;
   }
-}
 
-/* ==================== EXPORT WORD ==================== */
-function exportToWord(){
-  const acteDiv = document.querySelector(".act-page");
-  if(!acteDiv) return;
-  const acteContent = acteDiv.innerHTML;
-  const wordHTML = `
-    <html xmlns:o="urn:schemas-microsoft-com:office:office"
-          xmlns:w="urn:schemas-microsoft-com:office:word"
-          xmlns="http://www.w3.org/TR/REC-html40">
-    <head>
-      <meta charset="UTF-8">
-      <title>Acte de Vente Immobilière</title>
-      <style>
-        body{font-family:"Times New Roman", Times, serif;font-size:12pt;line-height:1.5;text-align:justify;color:#111;margin:20mm 18mm;}
-        p{margin:0 0 10pt 0;}
-        .center{text-align:center;}
-        .right{text-align:right;}
-        .bold{font-weight:700;}
-        .underline{text-decoration:underline;}
-        .italic{font-style:italic;}
-        .head{font-weight:700;text-decoration:underline;text-align:center;margin:16pt 0 8pt 0;}
-        .head-plain{font-weight:400;text-decoration:none;text-align:left;margin:16pt 0 8pt 0;}
-        .head-italic-underline{font-weight:700;font-style:italic;text-decoration:underline;text-align:center;margin:14pt 0 10pt 0;}
-        table.sig-table{width:100%;border-collapse:collapse;margin-top:18pt;}
-        table.sig-table th, table.sig-table td{border:1px solid #000;padding:8pt 6pt;font-size:11pt;vertical-align:top;}
-        table.sig-table th{font-weight:700;background:#f4f1ea;text-align:center;}
-        .blank-line{margin:4pt 0;}
-        @page{size:A4;margin:20mm 18mm;}
-      </style>
-    </head>
-    <body>${acteContent}</body>
-    </html>
-  `;
-
-  const blob = new Blob([wordHTML], { type: "application/msword" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "Acte_de_Vente_Immobiliere.doc";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-/* ==================== MODAL À PROPOS ==================== */
-function showAboutModal(){
-  document.getElementById("aboutModal").classList.add("show");
-}
-function hideAboutModal(){
-  document.getElementById("aboutModal").classList.remove("show");
-}
-
-/* ==================== GESTION IMPRESSION (DÉSACTIVE ÉDITION DIRECTE) ==================== */
-window.addEventListener('beforeprint', function() {
-  const page = document.querySelector('.act-page');
-  if (page && page.isContentEditable) {
-    page.setAttribute('contenteditable', 'false');
-    page._wasEditable = true;
-  }
-});
-
-window.addEventListener('afterprint', function() {
-  const page = document.querySelector('.act-page');
-  if (page && page._wasEditable) {
-    page.setAttribute('contenteditable', 'true');
-    page._wasEditable = false;
-  }
-});
-
-/* ==================== INITIALISATION ==================== */
-document.addEventListener("DOMContentLoaded", function(){
-  // Événements formulaire
-  document.querySelectorAll("input, select").forEach(function(el){
-    el.addEventListener("input", function(){ if(!editMode && document.getElementById("appMain").classList.contains("active")) render(); });
-    el.addEventListener("change", function(){ if(!editMode && document.getElementById("appMain").classList.contains("active")) render(); });
+  document.getElementById("btnGenerate").addEventListener("click", () => {
+    collectStepData();
+    const html = generateActeHTML(dossierData);
+    const preview = document.getElementById("actePreview");
+    preview.innerHTML = html;
+    preview.classList.remove("hidden");
+    document.getElementById("exportButtons").classList.remove("hidden");
+    document.getElementById("btnGenerate").classList.add("hidden");
+    document.getElementById("btnSaveDraft").classList.add("hidden");
   });
 
-  // Boutons
-  document.getElementById("btnLogin").addEventListener("click", handleLogin);
-  document.getElementById("loginPassword").addEventListener("keydown", function(e){
-    if(e.key === "Enter") handleLogin();
+  // Export
+  function getActeContent() { return document.getElementById("actePreview").innerHTML; }
+  document.getElementById("btnExportWord").addEventListener("click", () => {
+    const blob = new Blob([`<html><head><meta charset="UTF-8"></head><body>${getActeContent()}</body></html>`], {type:"application/msword"});
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "acte_vente.doc"; a.click();
   });
-  document.getElementById("loginUsername").addEventListener("keydown", function(e){
-    if(e.key === "Enter") document.getElementById("loginPassword").focus();
+  document.getElementById("btnExportPDF").addEventListener("click", () => window.print());
+  document.getElementById("btnExportHTML").addEventListener("click", () => {
+    const blob = new Blob([`<html><head><meta charset="UTF-8"></head><body>${getActeContent()}</body></html>`], {type:"text/html"});
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "acte_vente.html"; a.click();
   });
 
-  document.getElementById("printBtn").addEventListener("click", function(){ window.print(); });
-  document.getElementById("wordBtn").addEventListener("click", exportToWord);
-  document.getElementById("editToggleBtn").addEventListener("click", toggleEditModeDirect);
-  document.getElementById("logoutBtn").addEventListener("click", handleLogout);
-  document.getElementById("aboutBtn").addEventListener("click", showAboutModal);
-  document.getElementById("closeAboutModal").addEventListener("click", hideAboutModal);
-
-  // Fermer la modale en cliquant en dehors
-  document.getElementById("aboutModal").addEventListener("click", function(e){
-    if(e.target === this) hideAboutModal();
+  // Initial render after auth state
+  window.addEventListener("load", () => {
+    if (!currentUser) loginScreen.classList.remove("hidden");
   });
-});
 </script>
-
 </body>
 </html>
